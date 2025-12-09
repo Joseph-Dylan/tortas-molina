@@ -33,7 +33,7 @@ app.use((req, res) => {
 });
 
 // Iniciar servidor
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
   console.log(`📦 Base de datos: ${process.env.DB_NAME}`);
