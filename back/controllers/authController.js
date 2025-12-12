@@ -28,6 +28,12 @@ exports.registrar = async (req, res) => {
         .json({ error: "El número de teléfono debe tener 10 dígitos" });
     }
 
+    if (isNaN(telefono)) {
+      return res
+        .status(400)
+        .json({ error: "El número de teléfono debe ser numérico" });
+    }
+
     // Verificar si el usuario ya existe
     const [existing] = await pool.execute(
       "SELECT id FROM usuarios WHERE email = ?",
@@ -165,6 +171,12 @@ exports.actualizarPerfil = async (req, res) => {
       return res
         .status(400)
         .json({ error: "El número de teléfono debe tener 10 dígitos" });
+    }
+
+    if (isNaN(telefono)) {
+      return res
+        .status(400)
+        .json({ error: "El número de teléfono debe ser numérico" });
     }
 
     const [result] = await pool.execute(

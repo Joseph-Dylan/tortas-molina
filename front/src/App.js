@@ -161,6 +161,7 @@ function App() {
     } catch (error) {
       alert(`❌ Error: ${error.response?.data?.error || error.message}`);
     }
+    window.location.reload();
   };
 
   const eliminarDelCarrito = async (productoId) => {
