@@ -40,6 +40,10 @@ function App() {
   const cargarProductos = async () => {
     try {
       const response = await axios.get("/api/productos");
+      const productosConImagenes = response.data.map((producto) => ({
+        ...producto,
+        imagen_url: producto.imagen_url || "/imagenes-tortas/torta-default.jpg",
+      }));
       setProductos(response.data);
     } catch (error) {
       console.error("Error cargando productos:", error);
@@ -222,7 +226,7 @@ function App() {
         <h2>✨ Nuestros Servicios</h2>
         <div style={styles.featureGrid}>
           <div style={styles.featureCard}>
-            <h3>🎂 Tortas Clásicas</h3>
+            <h3>🥪 Tortas Clásicas</h3>
             <p>Recetas tradicionales con el sabor de siempre</p>
           </div>
           <div style={styles.featureCard}>
@@ -264,43 +268,51 @@ function App() {
       <p style={styles.subtitle}>{productos.length} productos disponibles</p>
 
       <div style={styles.productGrid}>
-        {productos.map((producto) => (
-          <div key={producto.id} style={styles.productCard}>
-            <div
-              style={{
-                ...styles.productImage,
-                backgroundImage: `url(${
-                  producto.imagen_url ||
-                  "https://via.placeholder.com/300x200?text=Torta"
-                })`,
-              }}
-            ></div>
-            <div style={styles.productInfo}>
-              <h3 style={styles.productName}>{producto.nombre}</h3>
-              <p style={styles.productDesc}>{producto.descripcion}</p>
-              <div style={styles.productDetails}>
-                <span style={styles.productPrice}>${producto.precio}</span>
-                <span style={styles.productStock}>
-                  {producto.stock > 0 ? `Stock: ${producto.stock}` : "Agotado"}
-                </span>
+        {productos.map((producto) => {
+          const imagenURL =
+            producto.imagen_url || "/imagenes-tortas/torta-default.jpg";
+
+          return (
+            <div key={producto.id} style={styles.productCard}>
+              <div style={styles.productImageContainer}>
+                <img
+                  src={imagenURL}
+                  alt={producto.nombre}
+                  style={styles.productImageTag}
+                  onError={(e) => {
+                    e.target.src = "/imagenes-tortas/torta-default.jpg";
+                  }}
+                />
               </div>
-              <button
-                style={{
-                  ...styles.addToCartButton,
-                  opacity: producto.stock === 0 || !usuario ? 0.5 : 1,
-                }}
-                onClick={() => agregarAlCarrito(producto.id)}
-                disabled={producto.stock === 0 || !usuario}
-              >
-                {!usuario
-                  ? "Inicia sesión"
-                  : producto.stock === 0
-                  ? "Agotado"
-                  : "Agregar al Carrito"}
-              </button>
+              <div style={styles.productInfo}>
+                <h3 style={styles.productName}>{producto.nombre}</h3>
+                <p style={styles.productDesc}>{producto.descripcion}</p>
+                <div style={styles.productDetails}>
+                  <span style={styles.productPrice}>${producto.precio}</span>
+                  <span style={styles.productStock}>
+                    {producto.stock > 0
+                      ? `Stock: ${producto.stock}`
+                      : "Agotado"}
+                  </span>
+                </div>
+                <button
+                  style={{
+                    ...styles.addToCartButton,
+                    opacity: producto.stock === 0 || !usuario ? 0.5 : 1,
+                  }}
+                  onClick={() => agregarAlCarrito(producto.id)}
+                  disabled={producto.stock === 0 || !usuario}
+                >
+                  {!usuario
+                    ? "Inicia sesión"
+                    : producto.stock === 0
+                    ? "Agotado"
+                    : "Agregar al Carrito"}
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -1595,8 +1607,10 @@ const styles = {
   },
   productImage: {
     height: "220px",
-    backgroundSize: "cover",
+    backgroundSize: "contain",
     backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+    backgroundColor: "#F5E2C8",
     position: "relative",
     transition: "transform 0.4s ease",
     background: "linear-gradient(135deg, #F9A825 0%, #F5E2C8 100%)",
@@ -1869,6 +1883,19 @@ const styles = {
     textAlign: "center",
     padding: "20px",
     marginTop: "40px",
+  },
+  productImageContainer: {
+    height: "220px",
+    overflow: "hidden",
+    position: "relative",
+  },
+
+  productImageTag: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    objectPosition: "center",
+    transition: "transform 0.4s ease",
   },
 };
 
