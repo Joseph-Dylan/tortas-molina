@@ -72,3 +72,55 @@ CREATE TABLE venta_items (
     FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE CASCADE,
     FOREIGN KEY (producto_id) REFERENCES productos(id)
 );
+
+-- ============================================
+-- INSERTAR DATOS DE PRUEBA CON IMÁGENES
+-- ============================================
+
+-- Insertar categorías
+INSERT INTO categorias (nombre, descripcion) VALUES
+('Tortas clásicas', 'Tortas tradicionales mexicanas con ingredientes auténticos'),
+('Tortas especiales', 'Tortas con combinaciones únicas y premium'),
+('Tortas vegetarianas', 'Opción vegetariana sin carne'),
+('Tortas de desayuno', 'Perfectas para empezar el día'),
+('Tortas de temporada', 'Especiales según la temporada');
+
+-- Insertar productos (tortas) CON IMÁGENES
+INSERT INTO productos (nombre, descripcion, precio, categoria_id, imagen_url, stock, ingredientes, peso_kg) VALUES
+-- Tortas clásicas
+('Torta de jamón', 'Torta tradicional con jamón de pierna, queso, aguacate, lechuga, jitomate y mayonesa', 75.00, 1, '/imagenes-tortas/torta-jamon.jpg', 20, 'Jamón de pierna, queso panela, aguacate, lechuga, jitomate, mayonesa, bolillo artesanal', 0.45),
+('Torta de salchicha', 'Torta con salchicha tipo alemana, queso, frijoles refritos y vegetales frescos', 80.00, 1, '/imagenes-tortas/torta-salchicha.jpg', 15, 'Salchicha alemana, frijoles refritos, queso manchego, cebolla, aguacate, jalapeños', 0.50),
+('Torta de milanesa de res', 'Crujiente milanesa de res con todos los complementos tradicionales', 95.00, 1, '/imagenes-tortas/torta-milanesa.jpg', 12, 'Milanesa de res, queso americano, lechuga, jitomate, cebolla, aguacate, mayonesa', 0.55),
+('Torta de pierna', 'Torta con pierna de cerdo adobada, papas y salsa verde', 85.00, 1, '/imagenes-tortas/torta-pierna.jpg', 18, 'Pierna de cerdo adobada, papas, salsa verde, cebolla, cilantro, queso fresco', 0.50),
+('Torta de chorizo', 'Torta con chorizo mexicano, huevo y frijoles refritos', 78.00, 1, '/imagenes-tortas/torta-chorizo.jpg', 22, 'Chorizo mexicano, huevo, frijoles refritos, queso, aguacate', 0.48),
+
+-- Tortas especiales
+('Torta ahogada', 'Torta típica de Guadalajara bañada en salsa picante de tomate', 110.00, 2, '/imagenes-tortas/torta-ahogada.jpg', 10, 'Pierna de cerdo, bolillo birote, salsa picante de tomate, cebolla, limón', 0.60),
+('Torta cubana', 'La reina de las tortas con múltiples carnes y quesos', 150.00, 2, '/imagenes-tortas/torta-cubana.jpg', 8, 'Jamón, milanesa de cerdo, salchicha, queso, pierna, aguacate, lechuga, jitomate', 0.75),
+('Torta de cochinita pibil', 'Torta con la famosa cochinita pibil yucateca', 120.00, 2, '/imagenes-tortas/torta-cochinita.jpg', 10, 'Cochinita pibil, cebolla morada, chile habanero, aguacate, pan francés', 0.58),
+('Torta de chilaquiles', 'Combinación perfecta de torta y chilaquiles verdes o rojos', 98.00, 2, '/imagenes-tortas/torta-chilaquiles.jpg', 14, 'Chilaquiles verdes/rojos, pollo deshebrado, crema, queso fresco, cebolla', 0.52),
+('Torta de tinga', 'Torta con tinga de pollo, chipotle y crema', 92.00, 2, '/imagenes-tortas/torta-tinga.jpg', 16, 'Tinga de pollo, chipotle, crema, aguacate, cebolla, bolillo', 0.50),
+
+-- Tortas vegetarianas
+('Torta de hongos', 'Torta con hongos salteados al epazote y quesos mexicanos', 85.00, 3, '/imagenes-tortas/torta-hongos.jpg', 15, 'Hongos portobello, epazote, queso oaxaca, aguacate, jitomate, lechuga', 0.48),
+('Torta de nopal', 'Torta saludable con nopales asados y queso panela', 75.00, 3, '/imagenes-tortas/torta-nopal.jpg', 20, 'Nopales asados, queso panela, frijoles, aguacate, cebolla, cilantro', 0.45),
+('Torta de calabacitas', 'Torta con calabacitas con elote y queso gratinado', 80.00, 3, '/imagenes-tortas/torta-calabacitas.jpg', 18, 'Calabacitas, elote, queso manchego, rajas, crema', 0.47),
+
+-- Tortas de desayuno
+('Torta de huevo con jamón', 'Clásico desayuno en torta', 65.00, 4, '/imagenes-tortas/torta-huevo-jamon.jpg', 25, 'Huevo, jamón, frijoles, queso, bolillo', 0.40),
+('Torta de chilaquiles con huevo', 'Ideal para el desayuno fuerte', 88.00, 4, '/imagenes-tortas/torta-chilaquiles-huevo.jpg', 12, 'Chilaquiles verdes, huevo estrellado, crema, queso, cebolla', 0.50),
+('Torta de huevo a la mexicana', 'Huevo revuelto con jitomate, cebolla y chile', 70.00, 4, '/imagenes-tortas/torta-huevo-mexicana.jpg', 20, 'Huevo, jitomate, cebolla, chile serrano, frijoles, aguacate', 0.42),
+
+-- Tortas de temporada
+('Torta de pavo navideña', 'Especial de temporada navideña', 130.00, 5, '/imagenes-tortas/torta-pavo.jpg', 30, 'Pavo horneado, salsa de ciruela, ensalada navideña, pan de telera', 0.65),
+('Torta de chiles en nogada', 'Inspirada en el platillo tradicional poblano', 140.00, 5, '/imagenes-tortas/torta-chiles-nogada.jpg', 25, 'Picadillo de cerdo, chile poblano, salsa de nuez, granada, perejil', 0.68);
+
+-- Insertar usuarios de prueba (1 admin, 2 clientes)
+INSERT INTO usuarios (nombre, email, password, telefono, direccion, rol) VALUES
+('Ana García', 'admin@tortas.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye0KJi6C0HbBz1QZJ.6bP3eFb5p0JZ4W2', '5512345678', 'Av. Insurgentes 123, CDMX', 'admin'),
+('Carlos Mendoza', 'cliente@tortas.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye0KJi6C0HbBz1QZJ.6bP3eFb5p0JZ4W2', '5511112222', 'Calle Rosa 45, Col. Juárez', 'cliente'),
+('María López', 'maria@email.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye0KJi6C0HbBz1QZJ.6bP3eFb5p0JZ4W2', '5533334444', 'Av. Reforma 789, CDMX', 'cliente');
+
+-- Nota: La contraseña para todos los usuarios es '123456' (hash bcrypt)
+
+
