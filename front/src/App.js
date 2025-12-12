@@ -942,293 +942,257 @@ function App() {
     </>
   );
 
-  const renderPerfil = () => (
-    <>
-      <div style={styles.container}>
-        <h1 style={styles.title}>👤 Tu Perfil</h1>
+  // COMPONENTE DE PERFIL - Agrega esto DESPUÉS de las constantes de estilo y ANTES del return principal
+  const ProfileComponent = ({ usuario, setUsuario }) => {
+    const [editMode, setEditMode] = useState(false);
+    const [editData, setEditData] = useState({
+      nombre: usuario?.nombre || "",
+      telefono: usuario?.telefono || "",
+      direccion: usuario?.direccion || "",
+    });
+    const [message, setMessage] = useState("");
+    const [loading, setLoading] = useState(false);
 
-        {usuario && (
+    useEffect(() => {
+      if (usuario) {
+        setEditData({
+          nombre: usuario.nombre || "",
+          telefono: usuario.telefono || "",
+          direccion: usuario.direccion || "",
+        });
+      }
+    }, [usuario]);
+
+    const handleEditChange = (e) => {
+      setEditData({
+        ...editData,
+        [e.target.name]: e.target.value,
+      });
+    };
+
+    const handleSaveProfile = async () => {
+      if (!editData.nombre || !editData.telefono || !editData.direccion) {
+        setMessage("❌ Todos los campos son obligatorios");
+        return;
+      }
+
+      if (editData.telefono.length !== 10) {
+        setMessage("❌ El teléfono debe tener 10 dígitos");
+        return;
+      }
+
+      setLoading(true);
+      setMessage("");
+
+      try {
+        const response = await axios.put(
+          "/api/auth/perfil",
+          {
+            nombre: editData.nombre,
+            telefono: editData.telefono,
+            direccion: editData.direccion,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        // Actualizar usuario en localStorage y estado
+        const updatedUser = {
+          ...usuario,
+          nombre: editData.nombre,
+          telefono: editData.telefono,
+          direccion: editData.direccion,
+        };
+        localStorage.setItem("usuario", JSON.stringify(updatedUser));
+        setUsuario(updatedUser);
+
+        setMessage("✅ Perfil actualizado exitosamente");
+        setEditMode(false);
+      } catch (error) {
+        console.error("Error actualizando perfil:", error);
+        setMessage(
+          `❌ Error: ${error.response?.data?.error || "Error en el servidor"}`
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const handleCancelEdit = () => {
+      setEditData({
+        nombre: usuario?.nombre || "",
+        telefono: usuario?.telefono || "",
+        direccion: usuario?.direccion || "",
+      });
+      setEditMode(false);
+      setMessage("");
+    };
+
+    if (!usuario) {
+      return (
+        <div style={styles.container}>
+          <div style={{ textAlign: "center", padding: "40px" }}>
+            <p>Cargando perfil...</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div style={styles.container}>
+          <h1 style={styles.title}>👤 Tu Perfil</h1>
+
+          {message && (
+            <div
+              style={{
+                ...styles.alertBox,
+                background: message.includes("✅")
+                  ? "#d4edda"
+                  : message.includes("❌")
+                  ? "#f8d7da"
+                  : "#fff3cd",
+                color: message.includes("✅")
+                  ? "#155724"
+                  : message.includes("❌")
+                  ? "#721c24"
+                  : "#856404",
+                borderColor: message.includes("✅")
+                  ? "#c3e6cb"
+                  : message.includes("❌")
+                  ? "#f5c6cb"
+                  : "#ffeaa7",
+              }}
+            >
+              {message}
+            </div>
+          )}
+
           <div style={styles.profileCard}>
             <div style={styles.profileHeader}>
-              <div style={styles.profileAvatar}>{usuario.nombre.charAt(0)}</div>
-              <h2>{usuario.nombre}</h2>
+              <div style={styles.profileAvatar}>
+                {usuario.nombre.charAt(0).toUpperCase()}
+              </div>
+              <h2 style={{ color: "#C62828" }}>{usuario.nombre}</h2>
               <p style={styles.profileEmail}>{usuario.email}</p>
+              <p style={styles.profileRole}>
+                <strong>Rol:</strong> {usuario.rol}
+              </p>
             </div>
 
             <div style={styles.profileInfo}>
-              <div style={styles.infoRow}>
-                <strong>Teléfono:</strong>
-                <span>{usuario.telefono || "No registrado"}</span>
-              </div>
-              <div style={styles.infoRow}>
-                <strong>Dirección:</strong>
-                <span>{usuario.direccion || "No registrada"}</span>
-              </div>
-              <div style={styles.infoRow}>
-                <strong>Rol:</strong>
-                <span>{usuario.rol}</span>
-              </div>
+              {editMode ? (
+                <>
+                  <div style={styles.editField}>
+                    <label style={styles.editLabel}>Nombre Completo</label>
+                    <input
+                      type="text"
+                      name="nombre"
+                      value={editData.nombre}
+                      onChange={handleEditChange}
+                      style={styles.editInput}
+                      disabled={loading}
+                    />
+                  </div>
+
+                  <div style={styles.editField}>
+                    <label style={styles.editLabel}>Teléfono</label>
+                    <input
+                      type="text"
+                      name="telefono"
+                      value={editData.telefono}
+                      onChange={handleEditChange}
+                      style={styles.editInput}
+                      disabled={loading}
+                      placeholder="10 dígitos"
+                    />
+                  </div>
+
+                  <div style={styles.editField}>
+                    <label style={styles.editLabel}>Dirección</label>
+                    <textarea
+                      name="direccion"
+                      value={editData.direccion}
+                      onChange={handleEditChange}
+                      style={{ ...styles.editInput, height: "80px" }}
+                      disabled={loading}
+                      rows="3"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={styles.infoRow}>
+                    <strong>Nombre:</strong>
+                    <span>{usuario.nombre}</span>
+                  </div>
+                  <div style={styles.infoRow}>
+                    <strong>Teléfono:</strong>
+                    <span>{usuario.telefono || "No registrado"}</span>
+                  </div>
+                  <div style={styles.infoRow}>
+                    <strong>Dirección:</strong>
+                    <span>{usuario.direccion || "No registrada"}</span>
+                  </div>
+                  <div style={styles.infoRow}>
+                    <strong>Email:</strong>
+                    <span>{usuario.email}</span>
+                  </div>
+                  <div style={styles.infoRow}>
+                    <strong>Rol:</strong>
+                    <span>{usuario.rol}</span>
+                  </div>
+                </>
+              )}
             </div>
 
             <div style={styles.profileActions}>
-              <button
-                style={styles.secondaryButton}
-                onClick={() => {
-                  // Aquí podrías implementar la edición del perfil
-                  alert("Función de edición de perfil en desarrollo");
-                }}
-              >
-                Editar Perfil
-              </button>
-              <button
-                style={styles.secondaryButton}
-                onClick={() => {
-                  // Aquí podrías implementar ver historial de compras
-                  alert("Historial de compras en desarrollo");
-                }}
-              >
-                Ver Mis Compras
-              </button>
+              {editMode ? (
+                <>
+                  <button
+                    style={{ ...styles.primaryButton, flex: 1 }}
+                    onClick={handleSaveProfile}
+                    disabled={loading}
+                  >
+                    {loading ? "Guardando..." : "💾 Guardar Cambios"}
+                  </button>
+                  <button
+                    style={{ ...styles.secondaryButton, flex: 1 }}
+                    onClick={handleCancelEdit}
+                    disabled={loading}
+                  >
+                    ❌ Cancelar
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    style={{ ...styles.primaryButton, flex: 1 }}
+                    onClick={() => setEditMode(true)}
+                  >
+                    ✏️ Editar Perfil
+                  </button>
+                  <button
+                    style={styles.secondaryButton}
+                    onClick={() => {
+                      alert(
+                        "Para ver tu historial de compras, ve a la sección de 'Mis Compras'"
+                      );
+                    }}
+                  >
+                    📋 Ver Historial
+                  </button>
+                </>
+              )}
             </div>
           </div>
-        )}
-      </div>
-
-      <style>
-        {`
-        @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes scaleIn {
-          from {
-            opacity: 0;
-            transform: scale(0.9);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-
-        @keyframes pulse {
-          0%, 100% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.05);
-          }
-        }
-
-        /* Decoración del perfil */
-        [style*="profileCard"] {
-          position: relative;
-          overflow: hidden;
-          animation: scaleIn 0.6s ease-out;
-        }
-
-        [style*="profileCard"]::before {
-          content: '👨‍🍳';
-          position: absolute;
-          top: -25px;
-          right: -25px;
-          font-size: 5rem;
-          opacity: 0.1;
-          transform: rotate(20deg);
-          z-index: 0;
-        }
-
-        [style*="profileCard"]::after {
-          content: '🎂';
-          position: absolute;
-          bottom: -25px;
-          left: -25px;
-          font-size: 5rem;
-          opacity: 0.1;
-          transform: rotate(-20deg);
-          z-index: 0;
-        }
-
-        /* Estilos para el avatar */
-        [style*="profileAvatar"] {
-          animation: pulse 2s infinite ease-in-out;
-          border: 3px solid #F9A825;
-          box-shadow: 0 4px 12px rgba(249, 168, 37, 0.4);
-        }
-
-        [style*="profileAvatar"]:hover {
-          transform: scale(1.1);
-          box-shadow: 0 6px 20px rgba(249, 168, 37, 0.6);
-        }
-
-        /* Estilos para la información */
-        [style*="profileInfo"] {
-          animation: fadeInUp 0.8s ease-out 0.2s both;
-        }
-
-        [style*="infoRow"] {
-          transition: all 0.3s ease;
-          border-bottom: 2px solid #F5E2C8;
-        }
-
-        [style*="infoRow"]:hover {
-          background-color: rgba(249, 168, 37, 0.05);
-          border-bottom-color: #F9A825;
-          transform: translateX(5px);
-          padding-left: 10px;
-          border-radius: 5px;
-        }
-
-        [style*="infoRow"] strong {
-          color: #C62828;
-          font-weight: 700;
-        }
-
-        [style*="infoRow"] span {
-          color: #212121;
-          font-weight: 500;
-        }
-
-        /* Estilos para los botones de acción */
-        [style*="secondaryButton"] {
-          position: relative;
-          overflow: hidden;
-          transition: all 0.3s ease;
-        }
-
-        [style*="secondaryButton"]:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 6px 20px rgba(198, 40, 40, 0.3);
-          background-color: #FFFFFF;
-          color: #C62828;
-          border-color: #F9A825;
-        }
-
-        [style*="secondaryButton"]::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(249, 168, 37, 0.3), transparent);
-          transition: left 0.6s;
-          z-index: 1;
-        }
-
-        [style*="secondaryButton"]:hover::before {
-          left: 100%;
-        }
-
-        /* Estilos para el header */
-        [style*="profileHeader"] {
-          animation: slideDown 0.6s ease-out;
-        }
-
-        [style*="profileHeader"] h2 {
-          color: #C62828;
-          text-shadow: 1px 1px 2px rgba(198, 40, 40, 0.2);
-        }
-
-        [style*="profileEmail"] {
-          color: #757575;
-          transition: color 0.3s ease;
-        }
-
-        [style*="profileEmail"]:hover {
-          color: #F9A825;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-          [style*="profileCard"] {
-            margin: 20px;
-            padding: 25px;
-          }
-
-          [style*="profileCard"]::before,
-          [style*="profileCard"]::after {
-            font-size: 3.5rem;
-          }
-
-          [style*="profileAvatar"] {
-            width: 70px;
-            height: 70px;
-            font-size: 1.8rem;
-          }
-
-          [style*="profileActions"] {
-            flex-direction: column;
-            gap: 12px;
-          }
-
-          [style*="secondaryButton"] {
-            width: 100%;
-          }
-        }
-
-        @media (max-width: 480px) {
-          [style*="profileCard"] {
-            margin: 15px;
-            padding: 20px;
-          }
-
-          [style*="title"] {
-            font-size: 1.8rem;
-          }
-
-          [style*="profileCard"]::before,
-          [style*="profileCard"]::after {
-            font-size: 2.5rem;
-          }
-
-          [style*="profileCard"]::before {
-            top: -15px;
-            right: -15px;
-          }
-
-          [style*="profileCard"]::after {
-            bottom: -15px;
-            left: -15px;
-          }
-
-          [style*="profileAvatar"] {
-            width: 60px;
-            height: 60px;
-            font-size: 1.5rem;
-          }
-
-          [style*="profileHeader"] h2 {
-            font-size: 1.4rem;
-          }
-
-          [style*="infoRow"] {
-            font-size: 0.95rem;
-            padding: 8px 0;
-          }
-        }
-      `}
-      </style>
-    </>
-  );
+        </div>
+      </>
+    );
+  };
 
   return (
     <div style={styles.app}>
@@ -1240,7 +1204,9 @@ function App() {
         {pagina === "carrito" && renderCarrito()}
         {pagina === "login" && renderLogin()}
         {pagina === "registro" && renderRegistro()}
-        {pagina === "perfil" && renderPerfil()}
+        {pagina === "perfil" && (
+          <ProfileComponent usuario={usuario} setUsuario={setUsuario} />
+        )}
       </main>
 
       <footer style={styles.footer}>
@@ -1850,6 +1816,53 @@ const styles = {
     objectFit: "cover",
     objectPosition: "center",
     transition: "transform 0.4s ease",
+  },
+
+  alertBox: {
+    padding: "15px 20px",
+    borderRadius: "10px",
+    margin: "20px auto",
+    maxWidth: "600px",
+    textAlign: "center",
+    fontWeight: "600",
+    border: "2px solid",
+    animation: "slideDown 0.5s ease-out",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+  },
+
+  editField: {
+    marginBottom: "20px",
+    animation: "fadeInUp 0.5s ease-out",
+  },
+
+  editLabel: {
+    display: "block",
+    marginBottom: "8px",
+    fontWeight: "600",
+    color: "#C62828",
+    fontSize: "1rem",
+  },
+
+  editInput: {
+    width: "100%",
+    padding: "12px 15px",
+    border: "3px solid #F5E2C8",
+    borderRadius: "8px",
+    fontSize: "1rem",
+    transition: "all 0.3s ease",
+    background: "#FFFFFF",
+    color: "#212121",
+  },
+
+  profileRole: {
+    color: "#6D4C41",
+    fontSize: "0.9rem",
+    marginTop: "5px",
+    background: "linear-gradient(135deg, #F9A825 0%, #F5E2C8 100%)",
+    padding: "5px 15px",
+    borderRadius: "20px",
+    display: "inline-block",
+    border: "2px solid #F9A825",
   },
 };
 
