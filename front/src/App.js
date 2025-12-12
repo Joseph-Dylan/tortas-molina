@@ -64,10 +64,16 @@ function App() {
   const cargarCarrito = async () => {
     try {
       const response = await axios.get("/api/carrito");
-      setCarrito(response.data.items);
-      setTotalCarrito(response.data.total);
+      setCarrito(response.data.items || []);
+
+      // Asegurar que total sea un número
+      const total = response.data.total ? parseFloat(response.data.total) : 0;
+
+      setTotalCarrito(total);
     } catch (error) {
       console.error("Error cargando carrito:", error);
+      setCarrito([]);
+      setTotalCarrito(0);
     }
   };
 
@@ -152,6 +158,62 @@ function App() {
       setTotalCarrito(0);
       alert("✅ Compra realizada exitosamente");
       setPagina("inicio");
+    } catch (error) {
+      alert(`❌ Error: ${error.response?.data?.error || error.message}`);
+    }
+  };
+
+  const eliminarDelCarrito = async (productoId) => {
+    if (!usuario) {
+      alert("Debes iniciar sesion para modificar el carrito");
+      setPagina("login");
+      return;
+    }
+
+    try {
+      await axios.delete(`/api/carrito/${productoId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      // Actualizar carrito localmente
+      const carritoActualizado = carrito.filter(
+        (item) => item.producto_id !== productoId
+      );
+      setCarrito(carritoActualizado);
+
+      // Recalcular total
+      const nuevoTotal = carritoActualizado.reduce((total, item) => {
+        return total + item.precio * item.cantidad;
+      }, 0);
+      setTotalCarrito(nuevoTotal);
+
+      alert("✅ Producto eliminado del carrito");
+    } catch (error) {
+      alert(`❌ Error: ${error.response?.data?.error || error.message}`);
+    }
+  };
+
+  const vaciarCarrito = async () => {
+    if (!usuario) {
+      alert("Debes iniciar sesión para modificar el carrito");
+      setPagina("login");
+      return;
+    }
+
+    try {
+      await axios.delete("/api/carrito", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      // Limpiar carrito localmente
+      setCarrito([]);
+      setTotalCarrito(0);
+
+      alert("✅ Carrito vaciado exitosamente");
     } catch (error) {
       alert(`❌ Error: ${error.response?.data?.error || error.message}`);
     }
@@ -364,6 +426,17 @@ function App() {
                         Subtotal: ${(item.precio * item.cantidad).toFixed(2)}
                       </p>
                     </div>
+
+                    {/* BOTÓN PARA ELIMINAR */}
+                    <div style={styles.cartItemActions}>
+                      <button
+                        style={styles.deleteButton}
+                        onClick={() => eliminarDelCarrito(item.producto_id)}
+                        title="Eliminar del carrito"
+                      >
+                        🗑️ Eliminar
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -372,12 +445,29 @@ function App() {
             <div style={styles.cartSummary}>
               <h2>Resumen de Compra</h2>
               <div style={styles.summaryRow}>
-                <span>Total:</span>
-                <span style={styles.totalAmount}>${totalCarrito}</span>
+                <span>Total ({carrito.length} productos):</span>
+                <span style={styles.totalAmount}>
+                  ${totalCarrito.toFixed(2)}
+                </span>
               </div>
-              <button style={styles.buyButton} onClick={comprarCarrito}>
-                💳 Realizar Compra
-              </button>
+
+              {/* Botón para vaciar todo el carrito */}
+              <div style={styles.cartActions}>
+                <button
+                  style={styles.secondaryButton}
+                  onClick={() => {
+                    if (confirm("¿Estás seguro de vaciar todo el carrito?")) {
+                      // Llamar a vaciar carrito
+                      vaciarCarrito();
+                    }
+                  }}
+                >
+                  🗑️ Vaciar Carrito
+                </button>
+                <button style={styles.buyButton} onClick={comprarCarrito}>
+                  💳 Realizar Compra
+                </button>
+              </div>
             </div>
           </>
         )}
@@ -386,85 +476,168 @@ function App() {
       {/* Estilos CSS para el carrito */}
       <style>
         {`
-        /* Animación para items del carrito */
+      /* Animación para items del carrito */
+      [style*="cartItem"] {
+        animation: fadeIn 0.5s ease-out;
+      }
+
+      /* Hover effect para items del carrito */
+      [style*="cartItem"]:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 20px rgba(198, 40, 40, 0.2);
+        border-color: #F9A825;
+      }
+
+      /* Estilos para la imagen del carrito */
+      [style*="cartItemImage"] {
+        min-width: 120px;
+        min-height: 120px;
+        border-radius: 10px;
+        border: 3px solid #F5E2C8;
+        overflow: hidden;
+        background-color: #F5E2C8;
+      }
+
+      /* Estilos para los textos del carrito */
+      [style*="cartItemInfo"] h3 {
+        font-size: 1.3rem;
+        color: #C62828;
+        font-weight: bold;
+        margin: 0 0 10px 0;
+      }
+
+      [style*="cartItemInfo"] p {
+        margin: 5px 0;
+        color: #757575;
+        font-size: 0.95rem;
+      }
+
+      [style*="cartItemInfo"] p:last-child {
+        font-weight: bold;
+        color: #2E7D32;
+        font-size: 1.1rem;
+        margin-top: 10px;
+      }
+
+      /* Nuevos estilos para botones de acción */
+      [style*="cartItemActions"] {
+        display: flex;
+        align-items: center;
+        padding-left: 20px;
+        border-left: 2px solid #F5E2C8;
+        margin-left: 20px;
+      }
+
+      [style*="deleteButton"] {
+        background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%);
+        color: #FFFFFF;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 3px 10px rgba(244, 67, 54, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+      }
+
+      [style*="deleteButton"]:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(244, 67, 54, 0.5);
+        background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
+      }
+
+      [style*="deleteButton"]:active {
+        transform: translateY(-1px);
+      }
+
+      [style*="cartActions"] {
+        display: flex;
+        gap: 15px;
+        margin-top: 25px;
+      }
+
+      [style*="cartActions"] button {
+        flex: 1;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateX(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      /* Animación para eliminar */
+      @keyframes slideOut {
+        from {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateX(100px);
+        }
+      }
+
+      .removing {
+        animation: slideOut 0.3s ease-out forwards;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
         [style*="cartItem"] {
-          animation: fadeIn 0.5s ease-out;
+          flex-direction: column;
+          text-align: center;
+          position: relative;
         }
 
-        /* Hover effect para items del carrito */
-        [style*="cartItem"]:hover {
-          transform: translateX(5px);
-          box-shadow: 0 5px 20px rgba(198, 40, 40, 0.2);
-          border-color: #F9A825;
-        }
-
-        /* Estilos para la imagen del carrito */
         [style*="cartItemImage"] {
-          min-width: 120px;
-          min-height: 120px;
-          border-radius: 10px;
-          border: 3px solid #F5E2C8;
-          overflow: hidden;
-          background-color: #F5E2C8;
+          width: 180px;
+          height: 120px;
+          margin: 0 auto 15px;
         }
 
-        /* Estilos para los textos del carrito */
         [style*="cartItemInfo"] h3 {
-          font-size: 1.3rem;
-          color: #C62828;
-          font-weight: bold;
-          margin: 0 0 10px 0;
+          font-size: 1.2rem;
         }
 
-        [style*="cartItemInfo"] p {
-          margin: 5px 0;
-          color: #757575;
-          font-size: 0.95rem;
+        [style*="cartItemActions"] {
+          border-left: none;
+          border-top: 2px solid #F5E2C8;
+          margin-left: 0;
+          margin-top: 15px;
+          padding-left: 0;
+          padding-top: 15px;
+          width: 100%;
+          justify-content: center;
         }
 
-        [style*="cartItemInfo"] p:last-child {
-          font-weight: bold;
-          color: #2E7D32;
-          font-size: 1.1rem;
-          margin-top: 10px;
+        [style*="cartActions"] {
+          flex-direction: column;
+        }
+      }
+
+      @media (max-width: 480px) {
+        [style*="cartItemImage"] {
+          width: 150px;
+          height: 100px;
         }
 
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateX(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
+        [style*="deleteButton"] {
+          padding: 8px 16px;
+          font-size: 0.85rem;
         }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-          [style*="cartItem"] {
-            flex-direction: column;
-            text-align: center;
-          }
-
-          [style*="cartItemImage"] {
-            width: 180px;
-            height: 120px;
-            margin: 0 auto 15px;
-          }
-
-          [style*="cartItemInfo"] h3 {
-            font-size: 1.2rem;
-          }
-        }
-
-        @media (max-width: 480px) {
-          [style*="cartItemImage"] {
-            width: 150px;
-            height: 100px;
-          }
-        }
-      `}
+      }
+    `}
       </style>
     </>
   );
@@ -1175,16 +1348,6 @@ function App() {
                   >
                     ✏️ Editar Perfil
                   </button>
-                  <button
-                    style={styles.secondaryButton}
-                    onClick={() => {
-                      alert(
-                        "Para ver tu historial de compras, ve a la sección de 'Mis Compras'"
-                      );
-                    }}
-                  >
-                    📋 Ver Historial
-                  </button>
                 </>
               )}
             </div>
@@ -1863,6 +2026,37 @@ const styles = {
     borderRadius: "20px",
     display: "inline-block",
     border: "2px solid #F9A825",
+  },
+
+  cartItemActions: {
+    display: "flex",
+    alignItems: "center",
+    paddingLeft: "20px",
+    borderLeft: "2px solid #F5E2C8",
+    marginLeft: "20px",
+  },
+
+  deleteButton: {
+    background: "linear-gradient(135deg, #F44336 0%, #D32F2F 100%)",
+    color: "#FFFFFF",
+    border: "none",
+    padding: "10px 20px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontSize: "0.9rem",
+    fontWeight: "600",
+    transition: "all 0.3s ease",
+    boxShadow: "0 3px 10px rgba(244, 67, 54, 0.3)",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    whiteSpace: "nowrap",
+  },
+
+  cartActions: {
+    display: "flex",
+    gap: "15px",
+    marginTop: "25px",
   },
 };
 
