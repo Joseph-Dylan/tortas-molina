@@ -1,4 +1,4 @@
-const pool = require('../config/database');
+const pool = require("../config/database");
 
 // Obtener todos los productos
 exports.obtenerProductos = async (req, res) => {
@@ -9,11 +9,11 @@ exports.obtenerProductos = async (req, res) => {
       LEFT JOIN categorias c ON p.categoria_id = c.id
       ORDER BY p.created_at DESC
     `);
-    
+
     res.json(productos);
   } catch (error) {
-    console.error('Error obteniendo productos:', error);
-    res.status(500).json({ error: 'Error en el servidor' });
+    console.error("Error obteniendo productos:", error);
+    res.status(500).json({ error: "Error en el servidor" });
   }
 };
 
@@ -21,33 +21,46 @@ exports.obtenerProductos = async (req, res) => {
 exports.obtenerProducto = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    const [productos] = await pool.execute(`
+
+    if (!id) {
+      return res
+        .status(400)
+        .json({ error: "Id del producto no proporcionado" });
+    }
+
+    console.log("Id del prodcuto a obtener", id);
+    const [productos] = await pool.execute(
+      `
       SELECT p.*, c.nombre as categoria_nombre 
       FROM productos p 
       LEFT JOIN categorias c ON p.categoria_id = c.id
       WHERE p.id = ?
-    `, [id]);
+    `,
+      [id]
+    );
 
     if (productos.length === 0) {
-      return res.status(404).json({ error: 'Producto no encontrado' });
+      console.log("No se encontro el prodcuto con ese id");
+      return res.status(404).json({ error: "Producto no encontrado" });
     }
 
     res.json(productos[0]);
   } catch (error) {
-    console.error('Error obteniendo producto:', error);
-    res.status(500).json({ error: 'Error en el servidor' });
+    console.error("Error obteniendo producto:", error);
+    res.status(500).json({ error: "Error en el servidor" });
   }
 };
 
 // Obtener categorías
 exports.obtenerCategorias = async (req, res) => {
   try {
-    const [categorias] = await pool.execute('SELECT * FROM categorias ORDER BY nombre');
+    const [categorias] = await pool.execute(
+      "SELECT * FROM categorias ORDER BY nombre"
+    );
     res.json(categorias);
   } catch (error) {
-    console.error('Error obteniendo categorías:', error);
-    res.status(500).json({ error: 'Error en el servidor' });
+    console.error("Error obteniendo categorías:", error);
+    res.status(500).json({ error: "Error en el servidor" });
   }
 };
 
@@ -55,7 +68,7 @@ exports.obtenerCategorias = async (req, res) => {
 exports.buscarProductos = async (req, res) => {
   try {
     const { query } = req.query;
-    
+
     const [productos] = await pool.execute(
       `SELECT p.*, c.nombre as categoria_nombre 
        FROM productos p 
@@ -67,7 +80,7 @@ exports.buscarProductos = async (req, res) => {
 
     res.json(productos);
   } catch (error) {
-    console.error('Error buscando productos:', error);
-    res.status(500).json({ error: 'Error en el servidor' });
+    console.error("Error buscando productos:", error);
+    res.status(500).json({ error: "Error en el servidor" });
   }
 };
