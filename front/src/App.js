@@ -337,17 +337,36 @@ function App() {
         ) : (
           <>
             <div style={styles.cartItems}>
-              {carrito.map((item) => (
-                <div key={item.producto_id} style={styles.cartItem}>
-                  <div style={styles.cartItemImage}></div>
-                  <div style={styles.cartItemInfo}>
-                    <h3>{item.nombre}</h3>
-                    <p>Cantidad: {item.cantidad}</p>
-                    <p>Precio unitario: ${item.precio}</p>
-                    <p>Subtotal: ${(item.precio * item.cantidad).toFixed(2)}</p>
+              {carrito.map((item) => {
+                // Buscar el producto completo en el estado productos para obtener la imagen
+                const producto = productos.find(
+                  (p) => p.id === item.producto_id
+                );
+                const imagenURL =
+                  producto?.imagen_url || "/imagenes-tortas/torta-default.jpg";
+
+                return (
+                  <div key={item.producto_id} style={styles.cartItem}>
+                    <div
+                      style={{
+                        ...styles.cartItemImage,
+                        backgroundImage: `url(${imagenURL})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                        backgroundRepeat: "no-repeat",
+                      }}
+                    ></div>
+                    <div style={styles.cartItemInfo}>
+                      <h3>{item.nombre}</h3>
+                      <p>Cantidad: {item.cantidad}</p>
+                      <p>Precio unitario: ${item.precio}</p>
+                      <p>
+                        Subtotal: ${(item.precio * item.cantidad).toFixed(2)}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div style={styles.cartSummary}>
@@ -364,153 +383,88 @@ function App() {
         )}
       </div>
 
+      {/* Estilos CSS para el carrito */}
       <style>
         {`
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+        /* Animación para items del carrito */
+        [style*="cartItem"] {
+          animation: fadeIn 0.5s ease-out;
+        }
 
-    @keyframes slideInLeft {
-      from {
-        opacity: 0;
-        transform: translateX(-30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
+        /* Hover effect para items del carrito */
+        [style*="cartItem"]:hover {
+          transform: translateX(5px);
+          box-shadow: 0 5px 20px rgba(198, 40, 40, 0.2);
+          border-color: #F9A825;
+        }
 
-    @keyframes scaleIn {
-      from {
-        opacity: 0;
-        transform: scale(0.9);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
+        /* Estilos para la imagen del carrito */
+        [style*="cartItemImage"] {
+          min-width: 120px;
+          min-height: 120px;
+          border-radius: 10px;
+          border: 3px solid #F5E2C8;
+          overflow: hidden;
+          background-color: #F5E2C8;
+        }
 
-    @keyframes pulse {
-      0%, 100% {
-        transform: scale(1);
-      }
-      50% {
-        transform: scale(1.05);
-      }
-    }
+        /* Estilos para los textos del carrito */
+        [style*="cartItemInfo"] h3 {
+          font-size: 1.3rem;
+          color: #C62828;
+          font-weight: bold;
+          margin: 0 0 10px 0;
+        }
 
-    /* Hover effects */
-    [style*="cartItem"]:hover {
-      transform: translateX(5px);
-      box-shadow: 0 5px 20px rgba(198, 40, 40, 0.2);
-      border-color: #F9A825;
-    }
+        [style*="cartItemInfo"] p {
+          margin: 5px 0;
+          color: #757575;
+          font-size: 0.95rem;
+        }
 
-    [style*="primaryButton"]:hover,
-    [style*="buyButton"]:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 25px rgba(198, 40, 40, 0.5);
-    }
+        [style*="cartItemInfo"] p:last-child {
+          font-weight: bold;
+          color: #2E7D32;
+          font-size: 1.1rem;
+          margin-top: 10px;
+        }
 
-    [style*="primaryButton"]:active,
-    [style*="buyButton"]:active {
-      transform: translateY(-1px);
-    }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
 
-    /* Efecto de brillo en botones */
-    [style*="buyButton"]::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-      transition: left 0.6s;
-    }
+        /* Responsive */
+        @media (max-width: 768px) {
+          [style*="cartItem"] {
+            flex-direction: column;
+            text-align: center;
+          }
 
-    [style*="buyButton"]:hover::before {
-      left: 100%;
-    }
+          [style*="cartItemImage"] {
+            width: 180px;
+            height: 120px;
+            margin: 0 auto 15px;
+          }
 
-    /* Estilos para los textos del carrito */
-    [style*="cartItemInfo"] h3 {
-      font-size: 1.3rem;
-      color: #C62828;
-      font-weight: bold;
-      margin: 0;
-    }
+          [style*="cartItemInfo"] h3 {
+            font-size: 1.2rem;
+          }
+        }
 
-    [style*="cartItemInfo"] p {
-      margin: 0;
-      color: #757575;
-      font-size: 0.95rem;
-    }
-
-    [style*="cartItemInfo"] p:last-child {
-      font-weight: bold;
-      color: #2E7D32;
-      font-size: 1.1rem;
-      margin-top: 5px;
-    }
-
-    [style*="cartSummary"] h2 {
-      color: #C62828;
-      font-size: 1.8rem;
-      margin-bottom: 10px;
-      text-align: center;
-      text-shadow: 1px 1px 2px rgba(198, 40, 40, 0.2);
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      [style*="cartItem"] {
-        flex-direction: column;
-        text-align: center;
-      }
-
-      [style*="cartItemImage"] {
-        margin: 0 auto 15px;
-      }
-
-      [style*="cartSummary"] {
-        position: static;
-        margin-top: 20px;
-      }
-
-      [style*="summaryRow"] {
-        font-size: 1.1rem;
-      }
-
-      [style*="totalAmount"] {
-        font-size: 1.6rem;
-      }
-    }
-
-    @media (max-width: 480px) {
-      [style*="cartItemImage"] {
-        width: 80px;
-        height: 80px;
-      }
-
-      [style*="title"] {
-        font-size: 2rem;
-      }
-
-      [style*="emptyCart"] {
-        padding: 50px 15px;
-      }
-    }
-  `}
+        @media (max-width: 480px) {
+          [style*="cartItemImage"] {
+            width: 150px;
+            height: 100px;
+          }
+        }
+      `}
       </style>
     </>
   );
