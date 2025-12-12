@@ -6,6 +6,16 @@ exports.agregarAlCarrito = async (req, res) => {
     const { productoId, cantidad } = req.body;
     const usuarioId = req.userId;
 
+    if (!productoId) {
+      console.log("Producto no proporcionado");
+      return res.status(400).json({ error: "Producto no proporcionado" });
+    }
+
+    if (!usuarioId) {
+      console.log("Usuario no proporcionado");
+      return res.status(401).json({ error: "Usuario no autorizado" });
+    }
+
     // Verificar producto
     const [productos] = await pool.execute(
       "SELECT id, stock, precio FROM productos WHERE id = ?",
@@ -92,6 +102,10 @@ exports.actualizarCantidad = async (req, res) => {
       return res.status(400).json({ error: "Cantidad inválida" });
     }
 
+    if (!productoId) {
+      return res.status(400).json({ error: "Producto no proporcionado" });
+    }
+
     // Verificar stock
     const [productos] = await pool.execute(
       "SELECT stock FROM productos WHERE id = ?",
@@ -129,6 +143,11 @@ exports.eliminarDelCarrito = async (req, res) => {
   try {
     const { productoId } = req.params;
     console.log("Producto a eliminar: ", productoId);
+
+    if (!productoId) {
+      return res.status(400).json({ error: "Producto no proporcionado" });
+    }
+
     const [result] = await pool.execute(
       "DELETE FROM carrito WHERE usuario_id = ? AND producto_id = ?",
       [req.userId, productoId]

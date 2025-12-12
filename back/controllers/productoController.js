@@ -21,6 +21,13 @@ exports.obtenerProductos = async (req, res) => {
 exports.obtenerProducto = async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!id) {
+      return res
+        .status(400)
+        .json({ error: "Id del producto no proporcionado" });
+    }
+
     console.log("Id del prodcuto a obtener", id);
     const [productos] = await pool.execute(
       `

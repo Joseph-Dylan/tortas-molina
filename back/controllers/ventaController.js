@@ -10,6 +10,16 @@ exports.crearVenta = async (req, res) => {
     const { metodo_pago, notas } = req.body;
     const usuarioId = req.userId;
 
+    if (!metodo_pago) {
+      await connection.rollback();
+      return res.status(400).json({ error: "Metodo de pago no proporcionado" });
+    }
+
+    if (!usuarioId) {
+      await connection.rollback();
+      return res.status(401).json({ error: "Usuario no autorizado" });
+    }
+
     // Obtener items del carrito
     const [carritoItems] = await connection.execute(
       `
@@ -111,6 +121,10 @@ exports.obtenerCompras = async (req, res) => {
 exports.obtenerDetalleVenta = async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: "Id de venta no proporcionado" });
+    }
 
     // Verificar que la venta pertenezca al usuario
     const [ventas] = await pool.execute(

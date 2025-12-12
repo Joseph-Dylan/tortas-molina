@@ -8,10 +8,10 @@ exports.registrar = async (req, res) => {
     const { nombre, email, password, telefono, direccion } = req.body;
 
     // Validar campos requeridos
-    if (!nombre || !email || !password) {
-      return res
-        .status(400)
-        .json({ error: "Nombre, email y contraseña son requeridos" });
+    if (!nombre || !email || !password || !telefono || !direccion) {
+      return res.status(400).json({
+        error: "Nombre, email, password, telefono y direccion son requeridos",
+      });
     }
 
     console.log("Datos recibidos: ", req.body);
@@ -20,6 +20,12 @@ exports.registrar = async (req, res) => {
     const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$/;
     if (!email.match(regex)) {
       return res.status(400).json({ error: "El email no es valido" });
+    }
+
+    if (telefono.length !== 10) {
+      return res
+        .status(400)
+        .json({ error: "El número de teléfono debe tener 10 dígitos" });
     }
 
     // Verificar si el usuario ya existe
@@ -48,6 +54,10 @@ exports.registrar = async (req, res) => {
       { expiresIn: "30d" }
     );
 
+    if (!token) {
+      return res.status(500).json({ error: "Error en el servidor" });
+    }
+
     res.status(201).json({
       message: "Usuario registrado exitosamente",
       token,
@@ -72,6 +82,11 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     console.log("Datos recibidos: ", req.body);
+
+    // Validar campos requeridos
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email y password son requeridos" });
+    }
 
     // Buscar usuario
     const [users] = await pool.execute(
@@ -141,6 +156,16 @@ exports.perfil = async (req, res) => {
 exports.actualizarPerfil = async (req, res) => {
   try {
     const { nombre, telefono, direccion } = req.body;
+
+    if (!nombre || !telefono || !direccion) {
+      return res.status(400).json({ error: "Todos los campos son requeridos" });
+    }
+
+    if (telefono.length !== 10) {
+      return res
+        .status(400)
+        .json({ error: "El número de teléfono debe tener 10 dígitos" });
+    }
 
     const [result] = await pool.execute(
       "UPDATE usuarios SET nombre = ?, telefono = ?, direccion = ? WHERE id = ?",
