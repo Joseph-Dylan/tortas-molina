@@ -16,7 +16,7 @@ app.use("/api", apiRoutes);
 // Ruta de prueba
 app.get("/", (req, res) => {
   res.json({
-    message: "🐐🐐🐐 API de Tortas Molina funcionando 🐐🐐🐐",
+    message: "🐐🐐🐐 API de Tortas Molina la Güera funcionando 🐐🐐🐐",
     version: "1.0.0",
     endpoints: {
       auth: "/api/auth/*",

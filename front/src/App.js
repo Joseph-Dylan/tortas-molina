@@ -228,7 +228,7 @@ function App() {
           alt="Tortas Molina"
           style={styles.logoImage}
         />
-        Tortas Molina
+        Tortas Molina la Güera
       </div>
       <div style={styles.navLinks}>
         <button style={styles.navButton} onClick={() => setPagina("inicio")}>
@@ -276,7 +276,7 @@ function App() {
   const renderInicio = () => (
     <div style={styles.container}>
       <div style={styles.hero}>
-        <h1 style={styles.heroTitle}>🥪 Bienvenido a Tortas Molina</h1>
+        <h1 style={styles.heroTitle}>Bienvenido a Tortas Molina la Güera</h1>
         <p style={styles.heroSubtitle}>
           Las mejores tortas artesanales de la ciudad
         </p>
@@ -1374,7 +1374,7 @@ function App() {
       </main>
 
       <footer style={styles.footer}>
-        <p>🥪 Tortas Molina - Sistema de Ventas © 2025</p>
+        <p>🥪 Tortas Molina la Güera - Sistema de Ventas © 2025</p>
         <p>
           Sistema desarrollado para la gestión de ventas de tortas artesanales
         </p>
