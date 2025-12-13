@@ -285,23 +285,7 @@ function App() {
         </div>
       </div>
 
-      <div style={styles.features}>
-        <h2>✨ Nuestros Servicios</h2>
-        <div style={styles.featureGrid}>
-          <div style={styles.featureCard}>
-            <h3>🥪 Tortas Clásicas</h3>
-            <p>Recetas tradicionales con el sabor de siempre</p>
-          </div>
-          <div style={styles.featureCard}>
-            <h3>🎉 Tortas Especiales</h3>
-            <p>Para cumpleaños, bodas y eventos especiales</p>
-          </div>
-          <div style={styles.featureCard}>
-            <h3>🎨 Personalizadas</h3>
-            <p>Diseños únicos según tus preferencias</p>
-          </div>
-        </div>
-      </div>
+      
 
       <div style={styles.quickActions}>
         <h2>Comienza ahora</h2>
