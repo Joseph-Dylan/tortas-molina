@@ -139,6 +139,20 @@ exports.login = async (req, res) => {
   }
 };
 
+exports.logout = async (req, res) => {
+  try {
+    // Aquí podrías invalidar el token si usas una blacklist
+    // Por ahora solo respondemos success
+    res.json({
+      success: true,
+      message: "Logout exitoso",
+    });
+  } catch (error) {
+    console.error("Error en logout:", error);
+    res.status(500).json({ error: "Error al cerrar sesión" });
+  }
+};
+
 // Obtener perfil
 exports.perfil = async (req, res) => {
   try {

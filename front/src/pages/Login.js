@@ -1,108 +1,109 @@
-import React, { useState } from 'react';
-import { Form, Button, Card, Alert } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import React from "react";
+import { Form, Button, Card } from "react-bootstrap";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useForm } from "../hooks";
+import { validateLoginForm } from "../utils/validation";
+import { ROUTES } from "../utils/constants";
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  const {
+    values,
+    isSubmitting,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+    getFieldError,
+  } = useForm({ email: "", password: "" }, validateLoginForm);
 
-  const validate = () => {
-    const newErrors = {};
-    if (!formData.email) newErrors.email = 'Email es requerido';
-    if (!formData.password) newErrors.password = 'Contraseña es requerida';
-    return newErrors;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
-    setLoading(true);
-    setErrors({});
-
+  const onSubmit = async (formData) => {
     const result = await login(formData.email, formData.password);
-    
     if (result.success) {
-      navigate('/');
-    } else {
-      setErrors({ general: result.error });
+      navigate(ROUTES.HOME);
     }
-    
-    setLoading(false);
   };
 
   return (
-    <div className="d-flex justify-content-center">
-      <Card style={{ width: '400px' }}>
-        <Card.Body>
-          <Card.Title className="text-center mb-4">Iniciar Sesión</Card.Title>
-          
-          {errors.general && (
-            <Alert variant="danger">{errors.general}</Alert>
-          )}
+    <div className="container">
+      <div className="row justify-content-center">
+        <div className="col-md-5">
+          <Card className="shadow">
+            <Card.Body className="p-4">
+              <Card.Title className="text-center mb-4">
+                <h2>Iniciar Sesión</h2>
+              </Card.Title>
 
-          <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3">
-              <Form.Label>Email</Form.Label>
-              <Form.Control
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                isInvalid={!!errors.email}
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.email}
-              </Form.Control.Feedback>
-            </Form.Group>
+              <Form onSubmit={handleSubmit(onSubmit)}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Email</Form.Label>
+                  <Form.Control
+                    type="email"
+                    name="email"
+                    placeholder="tu@email.com"
+                    value={values.email}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    isInvalid={!!getFieldError("email")}
+                    disabled={isSubmitting}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {getFieldError("email")}
+                  </Form.Control.Feedback>
+                </Form.Group>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Contraseña</Form.Label>
-              <Form.Control
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                isInvalid={!!errors.password}
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.password}
-              </Form.Control.Feedback>
-            </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Contraseña</Form.Label>
+                  <Form.Control
+                    type="password"
+                    name="password"
+                    placeholder="••••••••"
+                    value={values.password}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    isInvalid={!!getFieldError("password")}
+                    disabled={isSubmitting}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {getFieldError("password")}
+                  </Form.Control.Feedback>
+                </Form.Group>
 
-            <Button 
-              variant="primary" 
-              type="submit" 
-              className="w-100 mb-3"
-              disabled={loading}
-            >
-              {loading ? 'Iniciando...' : 'Iniciar Sesión'}
-            </Button>
+                <Button
+                  variant="primary"
+                  type="submit"
+                  className="w-100 mb-3"
+                  size="lg"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Iniciando..." : "Iniciar Sesión"}
+                </Button>
 
-            <div className="text-center">
-              <Link to="/register">¿No tienes cuenta? Regístrate</Link>
-            </div>
-          </Form>
-        </Card.Body>
-      </Card>
+                <div className="text-center">
+                  <p className="text-muted mb-2">
+                    ¿No tienes cuenta?{" "}
+                    <Link to={ROUTES.REGISTER}>Regístrate aquí</Link>
+                  </p>
+                </div>
+              </Form>
+
+              {/* Credenciales de prueba */}
+              <div className="mt-4 p-3 bg-light rounded">
+                <p className="small mb-1 text-muted">
+                  <strong>Credenciales de prueba:</strong>
+                </p>
+                <p className="small mb-0">
+                  Email: <code>cliente@tortas.com</code>
+                  <br />
+                  Contraseña: <code>123456</code>
+                </p>
+              </div>
+            </Card.Body>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };
