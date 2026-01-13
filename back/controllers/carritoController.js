@@ -6,6 +6,12 @@ exports.agregarAlCarrito = async (req, res) => {
     const { productoId, cantidad } = req.body;
     const usuarioId = req.userId;
 
+    const cantidadFinal = parseInt(cantidad) || 1;
+
+    if (cantidadFinal < 1) {
+      return res.status(400).json({ error: 'La cantidad debe ser al menos 1' });
+    }
+
     if (!productoId) {
       console.log("Producto no proporcionado");
       return res.status(400).json({ error: "Producto no proporcionado" });
@@ -18,49 +24,49 @@ exports.agregarAlCarrito = async (req, res) => {
 
     // Verificar producto
     const [productos] = await pool.execute(
-      "SELECT id, stock, precio FROM productos WHERE id = ?",
+      'SELECT id, stock, precio FROM productos WHERE id = ?',
       [productoId]
     );
 
     if (productos.length === 0) {
-      console.log("Producto no encontrado");
-      return res.status(404).json({ error: "Producto no encontrado" });
+      return res.status(404).json({ error: 'Producto no encontrado' });
     }
 
     const producto = productos[0];
 
     // Verificar stock
-    if (producto.stock < (cantidad || 1)) {
-      console.log("Stock insuficiente");
-      return res.status(400).json({ error: "Stock insuficiente" });
+    if (producto.stock < cantidadFinal) {
+      return res.status(400).json({ error: `Stock insuficiente. Disponible: ${producto.stock}` });
     }
 
     // Verificar si ya está en el carrito
     const [existentes] = await pool.execute(
-      "SELECT id, cantidad FROM carrito WHERE usuario_id = ? AND producto_id = ?",
+      'SELECT id, cantidad FROM carrito WHERE usuario_id = ? AND producto_id = ?',
       [usuarioId, productoId]
     );
 
     if (existentes.length > 0) {
-      console.log("Producto existente, actualizando cantidad");
-      // Actualizar cantidad
-      const nuevaCantidad = existentes[0].cantidad + (cantidad || 1);
-      await pool.execute("UPDATE carrito SET cantidad = ? WHERE id = ?", [
-        nuevaCantidad,
-        existentes[0].id,
-      ]);
+      // Sumar cantidad existente
+      const nuevaCantidad = existentes[0].cantidad + cantidadFinal;
+      await pool.execute(
+        'UPDATE carrito SET cantidad = ? WHERE id = ?',
+        [nuevaCantidad, existentes[0].id]
+      );
     } else {
       // Agregar nuevo
       await pool.execute(
-        "INSERT INTO carrito (usuario_id, producto_id, cantidad) VALUES (?, ?, ?)",
-        [usuarioId, productoId, cantidad || 1]
+        'INSERT INTO carrito (usuario_id, producto_id, cantidad) VALUES (?, ?, ?)',
+        [usuarioId, productoId, cantidadFinal]
       );
     }
 
-    res.json({ message: "Producto agregado al carrito" });
+    res.json({ 
+      message: `Producto agregado al carrito (cantidad: ${cantidadFinal})`,
+      cantidad: cantidadFinal
+    });
   } catch (error) {
-    console.error("Error agregando al carrito:", error);
-    res.status(500).json({ error: "Error en el servidor" });
+    console.error('Error agregando al carrito:', error);
+    res.status(500).json({ error: 'Error en el servidor' });
   }
 };
 
@@ -142,27 +148,54 @@ exports.actualizarCantidad = async (req, res) => {
 exports.eliminarDelCarrito = async (req, res) => {
   try {
     const { productoId } = req.params;
-    console.log("Producto a eliminar: ", productoId);
+    const { cantidad } = req.body; // Opcional: cantidad a eliminar
 
     if (!productoId) {
-      return res.status(400).json({ error: "Producto no proporcionado" });
+      return res.status(400).json({ error: 'Producto no proporcionado' });
     }
 
-    const [result] = await pool.execute(
-      "DELETE FROM carrito WHERE usuario_id = ? AND producto_id = ?",
-      [req.userId, productoId]
-    );
+    if (cantidad) {
+      // Eliminar cantidad específica
+      const [item] = await pool.execute(
+        'SELECT cantidad FROM carrito WHERE usuario_id = ? AND producto_id = ?',
+        [req.userId, productoId]
+      );
 
-    if (result.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({ error: "Producto no encontrado en el carrito" });
+      if (item.length === 0) {
+        return res.status(404).json({ error: 'Producto no encontrado en el carrito' });
+      }
+
+      const nuevaCantidad = item[0].cantidad - cantidad;
+      
+      if (nuevaCantidad <= 0) {
+        // Eliminar completamente si la cantidad es 0 o menos
+        await pool.execute(
+          'DELETE FROM carrito WHERE usuario_id = ? AND producto_id = ?',
+          [req.userId, productoId]
+        );
+      } else {
+        // Actualizar cantidad
+        await pool.execute(
+          'UPDATE carrito SET cantidad = ? WHERE usuario_id = ? AND producto_id = ?',
+          [nuevaCantidad, req.userId, productoId]
+        );
+      }
+    } else {
+      // Eliminar completamente
+      const [result] = await pool.execute(
+        'DELETE FROM carrito WHERE usuario_id = ? AND producto_id = ?',
+        [req.userId, productoId]
+      );
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'Producto no encontrado en el carrito' });
+      }
     }
-    console.log("Producto eliminado del carrito exitosamente");
-    res.json({ message: "Producto eliminado del carrito" });
+
+    res.json({ message: 'Producto actualizado en el carrito' });
   } catch (error) {
-    console.error("Error eliminando del carrito:", error);
-    res.status(500).json({ error: "Error en el servidor" });
+    console.error('Error eliminando del carrito:', error);
+    res.status(500).json({ error: 'Error en el servidor' });
   }
 };
 

@@ -11,6 +11,7 @@ function App() {
   const [pagina, setPagina] = useState("inicio");
   const [carrito, setCarrito] = useState([]);
   const [totalCarrito, setTotalCarrito] = useState(0);
+  const [cantidadesProductos, setCantidadesProductos] = useState({});
 
   // Estado para formularios
   const [formLogin, setFormLogin] = useState({ email: "", password: "" });
@@ -35,6 +36,18 @@ function App() {
     } catch (error) {
       setBackendStatus(`❌ Error: ${error.message}`);
     }
+  };
+
+  const actualizarCantidadProducto = (productoId, cantidad) => {
+    setCantidadesProductos(prev => ({
+      ...prev,
+      [productoId]: Math.max(1, cantidad)
+    }));
+  };
+
+  // Función para obtener cantidad de un producto
+  const obtenerCantidadProducto = (productoId) => {
+    return cantidadesProductos[productoId] || 1;
   };
 
   const cargarProductos = async () => {
@@ -128,21 +141,27 @@ function App() {
     setPagina("inicio");
   };
 
-  const agregarAlCarrito = async (productoId) => {
-    if (!usuario) {
-      alert("Debes iniciar sesión para agregar productos al carrito");
-      setPagina("login");
-      return;
-    }
+  const agregarAlCarrito = async (productoId, cantidadEspecifica = null) => {
+  if (!usuario) {
+    alert('Debes iniciar sesión para agregar productos al carrito');
+    setPagina('login');
+    return;
+  }
 
-    try {
-      await axios.post("/api/carrito/agregar", { productoId });
-      await cargarCarrito();
-      alert("✅ Producto agregado al carrito");
-    } catch (error) {
-      alert(`❌ Error: ${error.response?.data?.error || error.message}`);
-    }
-  };
+  // Usar cantidad específica o la del estado
+  const cantidad = cantidadEspecifica || obtenerCantidadProducto(productoId);
+
+  try {
+    await axios.post('/api/carrito/agregar', { 
+      productoId, 
+      cantidad: parseInt(cantidad) 
+    });
+    await cargarCarrito();
+    alert(`${cantidad} producto(s) agregado(s) al carrito`);
+  } catch (error) {
+    alert(`Error: ${error.response?.data?.error || error.message}`);
+  }
+};
 
   const comprarCarrito = async () => {
     if (carrito.length === 0) {
@@ -310,322 +329,232 @@ function App() {
   );
 
   const renderProductos = () => (
-    <div style={styles.container}>
-      <h1 style={styles.title}>🥪 Nuestras Tortas</h1>
-      <p style={styles.subtitle}>{productos.length} productos disponibles</p>
+  <div style={styles.container}>
+    <h1 style={styles.title}>Nuestras Tortas</h1>
+    <p style={styles.subtitle}>{productos.length} productos disponibles</p>
 
-      <div style={styles.productGrid}>
-        {productos.map((producto) => {
-          const imagenURL =
-            producto.imagen_url || "/imagenes-tortas/torta-default.jpg";
+    <div style={styles.productGrid}>
+      {productos.map((producto) => {
+        const imagenURL = producto.imagen_url || '/imagenes-tortas/torta-default.jpg';
+        const cantidadActual = obtenerCantidadProducto(producto.id);
+        const stockDisponible = producto.stock;
 
-          return (
-            <div key={producto.id} style={styles.productCard}>
-              <div style={styles.productImageContainer}>
-                <img
-                  src={imagenURL}
-                  alt={producto.nombre}
-                  style={styles.productImageTag}
-                  onError={(e) => {
-                    e.target.src = "/imagenes-tortas/torta-default.jpg";
-                  }}
-                />
-              </div>
-              <div style={styles.productInfo}>
-                <h3 style={styles.productName}>{producto.nombre}</h3>
-                <p style={styles.productDesc}>{producto.descripcion}</p>
-                <div style={styles.productDetails}>
-                  <span style={styles.productPrice}>${producto.precio}</span>
-                  <span style={styles.productStock}>
-                    {producto.stock > 0
-                      ? `Stock: ${producto.stock}`
-                      : "Agotado"}
-                  </span>
-                </div>
-                <button
-                  style={{
-                    ...styles.addToCartButton,
-                    opacity: producto.stock === 0 || !usuario ? 0.5 : 1,
-                  }}
-                  onClick={() => agregarAlCarrito(producto.id)}
-                  disabled={producto.stock === 0 || !usuario}
-                >
-                  {!usuario
-                    ? "Inicia sesión"
-                    : producto.stock === 0
-                    ? "Agotado"
-                    : "Agregar al Carrito"}
-                </button>
-              </div>
+        return (
+          <div key={producto.id} style={styles.productCard}>
+            <div style={styles.productImageContainer}>
+              <img
+                src={imagenURL}
+                alt={producto.nombre}
+                style={styles.productImageTag}
+                onError={(e) => {
+                  e.target.src = '/imagenes-tortas/torta-default.jpg';
+                }}
+              />
             </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-
-  const renderCarrito = () => (
-    <>
-      <div style={styles.container}>
-        <h1 style={styles.title}>🛒 Tu Carrito</h1>
-
-        {carrito.length === 0 ? (
-          <div style={styles.emptyCart}>
-            <p style={{ fontSize: "1.2rem", marginBottom: "20px" }}>
-              Tu carrito está vacío
-            </p>
-            <button
-              style={styles.primaryButton}
-              onClick={() => setPagina("productos")}
-            >
-              Ver Tortas
-            </button>
-          </div>
-        ) : (
-          <>
-            <div style={styles.cartItems}>
-              {carrito.map((item) => {
-                // Buscar el producto completo en el estado productos para obtener la imagen
-                const producto = productos.find(
-                  (p) => p.id === item.producto_id
-                );
-                const imagenURL =
-                  producto?.imagen_url || "/imagenes-tortas/torta-default.jpg";
-
-                return (
-                  <div key={item.producto_id} style={styles.cartItem}>
-                    <div
-                      style={{
-                        ...styles.cartItemImage,
-                        backgroundImage: `url(${imagenURL})`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                        backgroundRepeat: "no-repeat",
-                      }}
-                    ></div>
-                    <div style={styles.cartItemInfo}>
-                      <h3>{item.nombre}</h3>
-                      <p>Cantidad: {item.cantidad}</p>
-                      <p>Precio unitario: ${item.precio}</p>
-                      <p>
-                        Subtotal: ${(item.precio * item.cantidad).toFixed(2)}
-                      </p>
-                    </div>
-
-                    {/* BOTÓN PARA ELIMINAR */}
-                    <div style={styles.cartItemActions}>
-                      <button
-                        style={styles.deleteButton}
-                        onClick={() => eliminarDelCarrito(item.producto_id)}
-                        title="Eliminar del carrito"
-                      >
-                        🗑️ Eliminar
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div style={styles.cartSummary}>
-              <h2>Resumen de Compra</h2>
-              <div style={styles.summaryRow}>
-                <span>Total ({carrito.length} productos):</span>
-                <span style={styles.totalAmount}>
-                  ${totalCarrito.toFixed(2)}
+            <div style={styles.productInfo}>
+              <h3 style={styles.productName}>{producto.nombre}</h3>
+              <p style={styles.productDesc}>{producto.descripcion}</p>
+              <div style={styles.productDetails}>
+                <span style={styles.productPrice}>${producto.precio}</span>
+                <span style={styles.productStock}>
+                  Stock: {producto.stock}
                 </span>
               </div>
-
-              {/* Botón para vaciar todo el carrito */}
-              <div style={styles.cartActions}>
-                <button
-                  style={styles.secondaryButton}
-                  onClick={() => {
-                    if (confirm("¿Estás seguro de vaciar todo el carrito?")) {
-                      // Llamar a vaciar carrito
-                      vaciarCarrito();
-                    }
-                  }}
-                >
-                  🗑️ Vaciar Carrito
-                </button>
-                <button style={styles.buyButton} onClick={comprarCarrito}>
-                  💳 Realizar Compra
-                </button>
+              
+              {/* Selector de cantidad */}
+              <div style={styles.cantidadContainer}>
+                <label style={styles.cantidadLabel}>Cantidad:</label>
+                <div style={styles.cantidadControls}>
+                  <button 
+                    style={styles.cantidadButton}
+                    onClick={() => actualizarCantidadProducto(producto.id, cantidadActual - 1)}
+                    disabled={cantidadActual <= 1}
+                  >
+                    -
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    max={stockDisponible}
+                    value={cantidadActual}
+                    onChange={(e) => {
+                      const nuevaCantidad = Math.max(1, Math.min(stockDisponible, parseInt(e.target.value) || 1));
+                      actualizarCantidadProducto(producto.id, nuevaCantidad);
+                    }}
+                    style={styles.cantidadInput}
+                  />
+                  <button 
+                    style={styles.cantidadButton}
+                    onClick={() => actualizarCantidadProducto(producto.id, cantidadActual + 1)}
+                    disabled={cantidadActual >= stockDisponible}
+                  >
+                    +
+                  </button>
+                </div>
               </div>
+
+              <button
+                style={{
+                  ...styles.addToCartButton,
+                  opacity: producto.stock === 0 || !usuario ? 0.5 : 1,
+                }}
+                onClick={() => agregarAlCarrito(producto.id)}
+                disabled={producto.stock === 0 || !usuario}
+              >
+                {!usuario
+                  ? 'Inicia sesión'
+                  : producto.stock === 0
+                  ? 'Agotado'
+                  : `Agregar (${cantidadActual})`}
+              </button>
             </div>
-          </>
-        )}
-      </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+);
 
-      {/* Estilos CSS para el carrito */}
-      <style>
-        {`
-      /* Animación para items del carrito */
-      [style*="cartItem"] {
-        animation: fadeIn 0.5s ease-out;
-      }
+  const renderCarrito = () => {
+  const actualizarCantidadCarrito = async (productoId, nuevaCantidad) => {
+    if (nuevaCantidad < 1) {
+      // Si la cantidad es 0, eliminar el producto
+      await eliminarDelCarrito(productoId);
+      return;
+    }
 
-      /* Hover effect para items del carrito */
-      [style*="cartItem"]:hover {
-        transform: translateX(5px);
-        box-shadow: 0 5px 20px rgba(198, 40, 40, 0.2);
-        border-color: #F9A825;
-      }
-
-      /* Estilos para la imagen del carrito */
-      [style*="cartItemImage"] {
-        min-width: 120px;
-        min-height: 120px;
-        border-radius: 10px;
-        border: 3px solid #F5E2C8;
-        overflow: hidden;
-        background-color: #F5E2C8;
-      }
-
-      /* Estilos para los textos del carrito */
-      [style*="cartItemInfo"] h3 {
-        font-size: 1.3rem;
-        color: #C62828;
-        font-weight: bold;
-        margin: 0 0 10px 0;
-      }
-
-      [style*="cartItemInfo"] p {
-        margin: 5px 0;
-        color: #757575;
-        font-size: 0.95rem;
-      }
-
-      [style*="cartItemInfo"] p:last-child {
-        font-weight: bold;
-        color: #2E7D32;
-        font-size: 1.1rem;
-        margin-top: 10px;
-      }
-
-      /* Nuevos estilos para botones de acción */
-      [style*="cartItemActions"] {
-        display: flex;
-        align-items: center;
-        padding-left: 20px;
-        border-left: 2px solid #F5E2C8;
-        margin-left: 20px;
-      }
-
-      [style*="deleteButton"] {
-        background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%);
-        color: #FFFFFF;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 0.9rem;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        box-shadow: 0 3px 10px rgba(244, 67, 54, 0.3);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        white-space: nowrap;
-      }
-
-      [style*="deleteButton"]:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 20px rgba(244, 67, 54, 0.5);
-        background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
-      }
-
-      [style*="deleteButton"]:active {
-        transform: translateY(-1px);
-      }
-
-      [style*="cartActions"] {
-        display: flex;
-        gap: 15px;
-        margin-top: 25px;
-      }
-
-      [style*="cartActions"] button {
-        flex: 1;
-      }
-
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateX(-20px);
+    try {
+      await axios.put(`/api/carrito/${productoId}`, 
+        { cantidad: nuevaCantidad },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
         }
-        to {
-          opacity: 1;
-          transform: translateX(0);
-        }
-      }
+      );
+      await cargarCarrito();
+    } catch (error) {
+      alert(`❌ Error: ${error.response?.data?.error || error.message}`);
+    }
+  };
 
-      /* Animación para eliminar */
-      @keyframes slideOut {
-        from {
-          opacity: 1;
-          transform: translateX(0);
-        }
-        to {
-          opacity: 0;
-          transform: translateX(100px);
-        }
-      }
+  return (
+    <div style={styles.container}>
+      <h1 style={styles.title}>Tu Carrito</h1>
 
-      .removing {
-        animation: slideOut 0.3s ease-out forwards;
-      }
+      {carrito.length === 0 ? (
+        <div style={styles.emptyCart}>
+          <p style={{ fontSize: '1.2rem', marginBottom: '20px' }}>
+            Tu carrito está vacío
+          </p>
+          <button
+            style={styles.primaryButton}
+            onClick={() => setPagina('productos')}
+          >
+            Ver Tortas
+          </button>
+        </div>
+      ) : (
+        <>
+          <div style={styles.cartItems}>
+            {carrito.map((item) => {
+              const producto = productos.find(p => p.id === item.producto_id);
+              const imagenURL = producto?.imagen_url || '/imagenes-tortas/torta-default.jpg';
+              const stockDisponible = producto?.stock || 0;
 
-      /* Responsive */
-      @media (max-width: 768px) {
-        [style*="cartItem"] {
-          flex-direction: column;
-          text-align: center;
-          position: relative;
-        }
+              return (
+                <div key={item.producto_id} style={styles.cartItem}>
+                  <div
+                    style={{
+                      ...styles.cartItemImage,
+                      backgroundImage: `url(${imagenURL})`,
+                    }}
+                  ></div>
+                  <div style={styles.cartItemInfo}>
+                    <h3>{item.nombre}</h3>
+                    <p>Precio unitario: ${item.precio}</p>
+                    <p>Subtotal: ${(item.precio * item.cantidad).toFixed(2)}</p>
+                  </div>
 
-        [style*="cartItemImage"] {
-          width: 180px;
-          height: 120px;
-          margin: 0 auto 15px;
-        }
+                  <div style={styles.cantidadCarritoContainer}>
+                    <div style={styles.cantidadControls}>
+                      <button 
+                        style={styles.cantidadButton}
+                        onClick={() => actualizarCantidadCarrito(item.producto_id, item.cantidad - 1)}
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        min="1"
+                        max={stockDisponible + item.cantidad} // Stock actual + lo que ya tiene
+                        value={item.cantidad}
+                        onChange={(e) => {
+                          const nuevaCantidad = Math.max(1, Math.min(
+                            stockDisponible + item.cantidad, 
+                            parseInt(e.target.value) || 1
+                          ));
+                          actualizarCantidadCarrito(item.producto_id, nuevaCantidad);
+                        }}
+                        style={styles.cantidadInput}
+                      />
+                      <button 
+                        style={styles.cantidadButton}
+                        onClick={() => actualizarCantidadCarrito(item.producto_id, item.cantidad + 1)}
+                        disabled={item.cantidad >= stockDisponible}
+                      >
+                        +
+                      </button>
+                    </div>
+                    <span style={styles.stockInfo}>
+                      Stock disponible: {stockDisponible}
+                    </span>
+                  </div>
 
-        [style*="cartItemInfo"] h3 {
-          font-size: 1.2rem;
-        }
+                  <div style={styles.cartItemActions}>
+                    <button
+                      style={styles.deleteButton}
+                      onClick={() => eliminarDelCarrito(item.producto_id)}
+                      title="Eliminar del carrito"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
 
-        [style*="cartItemActions"] {
-          border-left: none;
-          border-top: 2px solid #F5E2C8;
-          margin-left: 0;
-          margin-top: 15px;
-          padding-left: 0;
-          padding-top: 15px;
-          width: 100%;
-          justify-content: center;
-        }
+          <div style={styles.cartSummary}>
+            <h2>Resumen de Compra</h2>
+            <div style={styles.summaryRow}>
+              <span>Total ({carrito.reduce((total, item) => total + item.cantidad, 0)} productos):</span>
+              <span style={styles.totalAmount}>
+                ${totalCarrito.toFixed(2)}
+              </span>
+            </div>
 
-        [style*="cartActions"] {
-          flex-direction: column;
-        }
-      }
-
-      @media (max-width: 480px) {
-        [style*="cartItemImage"] {
-          width: 150px;
-          height: 100px;
-        }
-
-        [style*="deleteButton"] {
-          padding: 8px 16px;
-          font-size: 0.85rem;
-        }
-      }
-    `}
-      </style>
-    </>
+            <div style={styles.cartActions}>
+              <button
+                style={styles.secondaryButton}
+                onClick={() => {
+                  if (confirm('¿Estás seguro de vaciar todo el carrito?')) {
+                    vaciarCarrito();
+                  }
+                }}
+              >
+                Vaciar Carrito
+              </button>
+              <button style={styles.buyButton} onClick={comprarCarrito}>
+                Realizar Compra
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   );
+};
 
   const renderLogin = () => (
     <>
@@ -2042,6 +1971,67 @@ const styles = {
     display: "flex",
     gap: "15px",
     marginTop: "25px",
+  },
+  cantidadContainer: {
+    marginBottom: '15px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+
+  cantidadLabel: {
+    fontSize: '0.9rem',
+    color: '#666',
+    fontWeight: '600',
+  },
+
+  cantidadControls: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+
+  cantidadButton: {
+    width: '35px',
+    height: '35px',
+    background: '#F5E2C8',
+    border: '2px solid #F9A825',
+    borderRadius: '5px',
+    fontSize: '1.2rem',
+    fontWeight: 'bold',
+    color: '#C62828',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.2s',
+  },
+
+  cantidadInput: {
+    width: '60px',
+    height: '35px',
+    border: '2px solid #F9A825',
+    borderRadius: '5px',
+    textAlign: 'center',
+    fontSize: '1rem',
+    fontWeight: '600',
+    color: '#212121',
+  },
+
+  cantidadCarritoContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '0 20px',
+    borderLeft: '2px solid #F5E2C8',
+    borderRight: '2px solid #F5E2C8',
+  },
+
+  stockInfo: {
+    fontSize: '0.8rem',
+    color: '#666',
+    textAlign: 'center',
   },
 };
 

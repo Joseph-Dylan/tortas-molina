@@ -44,6 +44,7 @@ router.get('/categorias', productoController.obtenerCategorias);
 router.post('/carrito/agregar', autenticar, carritoController.agregarAlCarrito);
 router.get('/carrito', autenticar, carritoController.obtenerCarrito);
 router.put('/carrito/:productoId', autenticar, carritoController.actualizarCantidad);
+// Ruta de carrito para eliminar con cantidad opcional
 router.delete('/carrito/:productoId', autenticar, carritoController.eliminarDelCarrito);
 router.delete('/carrito', autenticar, carritoController.vaciarCarrito);
 
