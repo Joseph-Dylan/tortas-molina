@@ -17,6 +17,19 @@ export const ROUTES = {
   PROFILE: "/profile",
   LOGIN: "/login",
   REGISTER: "/register",
+  ADMIN: "/admin",
+  ADMIN_VENTAS: "/admin/ventas",
+  ADMIN_PRODUCTOS: "/admin/productos",
+};
+/**
+ * Estados de venta
+ */
+export const VENTA_STATUS = {
+  PENDING: "pendiente",
+  PAID: "pagado",
+  PREPARING: "en_preparacion",
+  DELIVERED: "entregado",
+  CANCELLED: "cancelado",
 };
 
 /**

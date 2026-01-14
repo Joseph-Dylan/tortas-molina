@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Navbar, Nav, Container, Badge } from 'react-bootstrap';
-import { FaShoppingCart, FaUser, FaSignOutAlt } from 'react-icons/fa';
+import { FaShoppingCart, FaUser, FaSignOutAlt, FaCog } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
 const NavigationBar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth(); // ✅ Agregar isAdmin
   const { cart } = useCart();
   const navigate = useNavigate();
 
@@ -24,6 +24,13 @@ const NavigationBar = () => {
           <Nav className="me-auto">
             <Nav.Link as={Link} to="/">Inicio</Nav.Link>
             <Nav.Link as={Link} to="/products">Productos</Nav.Link>
+            
+            {/* ✅ LINK A ADMIN SOLO SI ES ADMIN */}
+            {isAdmin && (
+              <Nav.Link as={Link} to="/admin">
+                <FaCog /> Admin
+              </Nav.Link>
+            )}
           </Nav>
           
           <Nav>

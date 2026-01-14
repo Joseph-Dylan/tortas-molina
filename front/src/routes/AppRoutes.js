@@ -11,6 +11,7 @@ const Orders = React.lazy(() => import("../pages/Orders"));
 const Profile = React.lazy(() => import("../pages/Profile"));
 const Login = React.lazy(() => import("../pages/Login"));
 const Register = React.lazy(() => import("../pages/Register"));
+const Admin = React.lazy(() => import("../pages/admin")); 
 
 /**
  * Componente de rutas de la aplicación
@@ -48,6 +49,33 @@ const AppRoutes = () => {
         element={
           <PrivateRoute>
             <Profile />
+          </PrivateRoute>
+        }
+      />
+      {/* Rutas admin */}
+       <Route
+        path={ROUTES.ADMIN}
+        element={
+          <PrivateRoute requireAdmin={true}>
+            <Admin />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path={ROUTES.ADMIN_VENTAS}
+        element={
+          <PrivateRoute requireAdmin={true}>
+            <Admin />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path={ROUTES.ADMIN_PRODUCTOS}
+        element={
+          <PrivateRoute requireAdmin={true}>
+            <Admin />
           </PrivateRoute>
         }
       />

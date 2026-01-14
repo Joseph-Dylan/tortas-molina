@@ -17,10 +17,29 @@ export const AuthProvider = ({ children }) => {
     const userData = localStorage.getItem("user");
 
     if (token && userData) {
-      setUser(JSON.parse(userData));
+      const parsedUser = JSON.parse(userData);
+      console.log(parsedUser);
+      console.log(parsedUser.rol)
+      setUser(parsedUser);
     }
     setLoading(false);
   }, []);
+
+  /**
+   * Verificar si el usuario es administrador
+   * ✨ NUEVA FUNCIÓN
+   */
+  const isAdmin = () => {
+    return user?.rol === "admin";
+  };
+
+  /**
+   * Verificar si tiene un rol específico
+   * ✨ NUEVA FUNCIÓN
+   */
+  const hasRole = (role) => {
+    return user?.rol === role;
+  };
 
   /**
    * Iniciar sesión
@@ -112,6 +131,8 @@ export const AuthProvider = ({ children }) => {
         logout,
         updateProfile,
         loading,
+        isAdmin: user?.rol === "admin",
+        hasRole,
       }}
     >
       {children}
