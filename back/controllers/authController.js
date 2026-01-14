@@ -106,11 +106,16 @@ exports.login = async (req, res) => {
 
     const usuario = users[0];
 
+    console.log("Usuario encontrado: ", usuario);
+
     // Verificar contraseña
     const passwordValido = await bcrypt.compare(password, usuario.password);
     if (!passwordValido) {
+      console.log("Contraseña incorrecta");
       return res.status(401).json({ error: "Credenciales incorrectas" });
     }
+
+    console.log("Contraseña correcta, generando token");
 
     // Generar token
     const token = jwt.sign(
