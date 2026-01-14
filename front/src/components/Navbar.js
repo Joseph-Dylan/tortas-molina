@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Navbar, Nav, Container, Badge } from 'react-bootstrap';
 import { FaShoppingCart, FaUser, FaSignOutAlt, FaCog } from 'react-icons/fa';
@@ -6,9 +6,17 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
 const NavigationBar = () => {
-  const { user, logout, isAdmin } = useAuth(); // ✅ Agregar isAdmin
+  const { user, logout, isAdmin } = useAuth();
   const { cart } = useCart();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAdmin){
+      console.log('Admin');
+    }else{
+      console.log('User');
+    }
+  }, [user])
 
   const handleLogout = () => {
     logout();
@@ -25,7 +33,6 @@ const NavigationBar = () => {
             <Nav.Link as={Link} to="/">Inicio</Nav.Link>
             <Nav.Link as={Link} to="/products">Productos</Nav.Link>
             
-            {/* ✅ LINK A ADMIN SOLO SI ES ADMIN */}
             {isAdmin && (
               <Nav.Link as={Link} to="/admin">
                 <FaCog /> Admin
