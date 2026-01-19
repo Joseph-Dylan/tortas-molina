@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Card, Table, Button, Badge, Spinner } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Table,
+  Button,
+  Badge,
+  Spinner,
+} from "react-bootstrap";
 import { useAuth } from "../../context/AuthContext";
 import { adminService } from "../../services";
 import { toast } from "react-toastify";
@@ -45,7 +54,7 @@ const AdminDashboard = () => {
       "Nuevo estado (pendiente, pagado, en_preparacion, entregado, cancelado):",
       estadoActual
     );
-    
+
     if (nuevoEstado && nuevoEstado !== estadoActual) {
       try {
         await adminService.actualizarEstadoVenta(id, { estado: nuevoEstado });
@@ -58,24 +67,36 @@ const AdminDashboard = () => {
   };
 
   const getEstadoColor = (estado) => {
-    switch(estado) {
-      case 'pendiente': return 'warning';
-      case 'pagado': return 'info';
-      case 'en_preparacion': return 'primary';
-      case 'entregado': return 'success';
-      case 'cancelado': return 'danger';
-      default: return 'secondary';
+    switch (estado) {
+      case "pendiente":
+        return "warning";
+      case "pagado":
+        return "info";
+      case "en_preparacion":
+        return "primary";
+      case "entregado":
+        return "success";
+      case "cancelado":
+        return "danger";
+      default:
+        return "secondary";
     }
   };
 
   const getEstadoTexto = (estado) => {
-    switch(estado) {
-      case 'pendiente': return 'Pendiente';
-      case 'pagado': return 'Pagado';
-      case 'en_preparacion': return 'En Preparación';
-      case 'entregado': return 'Entregado';
-      case 'cancelado': return 'Cancelado';
-      default: return estado;
+    switch (estado) {
+      case "pendiente":
+        return "Pendiente";
+      case "pagado":
+        return "Pagado";
+      case "en_preparacion":
+        return "En Preparación";
+      case "entregado":
+        return "Entregado";
+      case "cancelado":
+        return "Cancelado";
+      default:
+        return estado;
     }
   };
 
@@ -100,17 +121,10 @@ const AdminDashboard = () => {
   return (
     <Container className="mt-4">
       <h1 className="mb-4">📊 Panel de Administración</h1>
-      
+
       <Card>
         <Card.Header className="d-flex justify-content-between align-items-center">
           <span>Todas las Ventas</span>
-          <Button 
-            variant="success" 
-            size="sm"
-            onClick={() => window.location.href = '/admin/nueva-venta'}
-          >
-            + Nueva Venta Manual
-          </Button>
         </Card.Header>
         <Card.Body>
           {ventas.length === 0 ? (
@@ -133,7 +147,9 @@ const AdminDashboard = () => {
                   <tr key={venta.id}>
                     <td>#{venta.id}</td>
                     <td>{new Date(venta.fecha_pedido).toLocaleDateString()}</td>
-                    <td>{venta.usuario_nombre || `Usuario ${venta.usuario_id}`}</td>
+                    <td>
+                      {venta.usuario_nombre || `Usuario ${venta.usuario_id}`}
+                    </td>
                     <td>${parseFloat(venta.total).toFixed(2)}</td>
                     <td>
                       <Badge bg={getEstadoColor(venta.estado)}>
@@ -147,24 +163,18 @@ const AdminDashboard = () => {
                     </td>
                     <td>
                       <div className="btn-group" role="group">
-                        <Button 
-                          variant="outline-info" 
+                        <Button
+                          variant="outline-warning"
                           size="sm"
-                          onClick={() => window.open(`/admin/ventas/${venta.id}`, '_blank')}
-                          className="me-1"
-                        >
-                          Ver
-                        </Button>
-                        <Button 
-                          variant="outline-warning" 
-                          size="sm"
-                          onClick={() => actualizarEstado(venta.id, venta.estado)}
+                          onClick={() =>
+                            actualizarEstado(venta.id, venta.estado)
+                          }
                           className="me-1"
                         >
                           Estado
                         </Button>
-                        <Button 
-                          variant="outline-danger" 
+                        <Button
+                          variant="outline-danger"
                           size="sm"
                           onClick={() => eliminarVenta(venta.id)}
                         >

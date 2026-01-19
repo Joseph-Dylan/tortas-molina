@@ -15,19 +15,25 @@ exports.crearProducto = async (req, res) => {
       imagen_url,
       stock,
       ingredientes,
-      peso_kg
+      peso_kg,
     } = req.body;
 
     // Validaciones básicas
     if (!nombre || !precio) {
-      return res.status(400).json({ 
-        error: "Nombre y precio son requeridos" 
+      return res.status(400).json({
+        error: "Nombre y precio son requeridos",
       });
     }
 
     if (precio <= 0) {
-      return res.status(400).json({ 
-        error: "El precio debe ser mayor a 0" 
+      return res.status(400).json({
+        error: "El precio debe ser mayor a 0",
+      });
+    }
+
+    if (stock < 0) {
+      return res.status(400).json({
+        error: "El stock debe ser mayor o igual a 0",
       });
     }
 
@@ -41,10 +47,10 @@ exports.crearProducto = async (req, res) => {
         descripcion || null,
         precio,
         categoria_id || null,
-        imagen_url || '/imagenes-tortas/default.jpg',
+        "/imagenes-tortas/torta-default.jpg",
         stock || 0,
         ingredientes || null,
-        peso_kg || 0.5
+        peso_kg || 0.5,
       ]
     );
 
@@ -59,9 +65,8 @@ exports.crearProducto = async (req, res) => {
 
     res.status(201).json({
       message: "Producto creado exitosamente",
-      producto: productos[0]
+      producto: productos[0],
     });
-
   } catch (error) {
     console.error("Error creando producto:", error);
     res.status(500).json({ error: "Error al crear producto" });
@@ -80,7 +85,7 @@ exports.actualizarProducto = async (req, res) => {
       imagen_url,
       stock,
       ingredientes,
-      peso_kg
+      peso_kg,
     } = req.body;
 
     // Verificar que el producto existe
@@ -114,7 +119,7 @@ exports.actualizarProducto = async (req, res) => {
         stock,
         ingredientes,
         peso_kg,
-        id
+        id,
       ]
     );
 
@@ -129,9 +134,8 @@ exports.actualizarProducto = async (req, res) => {
 
     res.json({
       message: "Producto actualizado exitosamente",
-      producto: productos[0]
+      producto: productos[0],
     });
-
   } catch (error) {
     console.error("Error actualizando producto:", error);
     res.status(500).json({ error: "Error al actualizar producto" });
@@ -143,7 +147,7 @@ exports.eliminarProducto = async (req, res) => {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
-    
+
     const { id } = req.params;
 
     // Verificar que el producto existe
@@ -165,26 +169,20 @@ exports.eliminarProducto = async (req, res) => {
 
     if (ventasAsociadas[0].count > 0) {
       await connection.rollback();
-      return res.status(400).json({ 
-        error: "No se puede eliminar el producto porque tiene ventas asociadas. Use 'stock = 0' en su lugar." 
+      return res.status(400).json({
+        error:
+          "No se puede eliminar el producto porque tiene ventas asociadas. Use 'stock = 0' en su lugar.",
       });
     }
 
     // Eliminar del carrito si existe
-    await connection.execute(
-      "DELETE FROM carrito WHERE producto_id = ?",
-      [id]
-    );
+    await connection.execute("DELETE FROM carrito WHERE producto_id = ?", [id]);
 
     // Eliminar producto
-    await connection.execute(
-      "DELETE FROM productos WHERE id = ?",
-      [id]
-    );
+    await connection.execute("DELETE FROM productos WHERE id = ?", [id]);
 
     await connection.commit();
     res.json({ message: "Producto eliminado exitosamente" });
-
   } catch (error) {
     await connection.rollback();
     console.error("Error eliminando producto:", error);
@@ -223,26 +221,26 @@ exports.crearVentaManual = async (req, res) => {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
-    
+
     const { usuario_id, items, metodo_pago, notas, estado } = req.body;
-    
+
     // Validaciones
     if (!usuario_id || !items || !Array.isArray(items) || items.length === 0) {
       await connection.rollback();
       return res.status(400).json({ error: "Datos de venta inválidos" });
     }
-    
+
     // Verificar que el usuario existe
     const [usuario] = await connection.execute(
       "SELECT id FROM usuarios WHERE id = ?",
       [usuario_id]
     );
-    
+
     if (usuario.length === 0) {
       await connection.rollback();
       return res.status(400).json({ error: "Usuario no encontrado" });
     }
-    
+
     // Calcular total y verificar stock
     let total = 0;
     for (const item of items) {
@@ -250,79 +248,81 @@ exports.crearVentaManual = async (req, res) => {
         "SELECT precio, stock, nombre FROM productos WHERE id = ?",
         [item.producto_id]
       );
-      
+
       if (producto.length === 0) {
         await connection.rollback();
-        return res.status(400).json({ 
-          error: `Producto ${item.producto_id} no encontrado` 
+        return res.status(400).json({
+          error: `Producto ${item.producto_id} no encontrado`,
         });
       }
-      
+
       if (producto[0].stock < item.cantidad) {
         await connection.rollback();
         return res.status(400).json({
-          error: `Stock insuficiente para ${producto[0].nombre}. Disponible: ${producto[0].stock}`
+          error: `Stock insuficiente para ${producto[0].nombre}. Disponible: ${producto[0].stock}`,
         });
       }
-      
+
       total += producto[0].precio * item.cantidad;
     }
-    
+
     // Crear venta
     const [ventaResult] = await connection.execute(
       `INSERT INTO ventas 
        (usuario_id, total, metodo_pago, notas, estado) 
        VALUES (?, ?, ?, ?, ?)`,
       [
-        usuario_id, 
-        total, 
-        metodo_pago || "efectivo", 
-        notas || "", 
-        estado || "pagado"
+        usuario_id,
+        total,
+        metodo_pago || "efectivo",
+        notas || "",
+        estado || "pagado",
       ]
     );
     const ventaId = ventaResult.insertId;
-    
+
     // Crear items y actualizar stock
     for (const item of items) {
       const [producto] = await connection.execute(
         "SELECT precio FROM productos WHERE id = ?",
         [item.producto_id]
       );
-      
+
       const subtotal = producto[0].precio * item.cantidad;
-      
+
       await connection.execute(
         `INSERT INTO venta_items 
          (venta_id, producto_id, cantidad, precio_unitario, subtotal) 
          VALUES (?, ?, ?, ?, ?)`,
         [ventaId, item.producto_id, item.cantidad, producto[0].precio, subtotal]
       );
-      
+
       // Actualizar stock
       await connection.execute(
         "UPDATE productos SET stock = stock - ? WHERE id = ?",
         [item.cantidad, item.producto_id]
       );
     }
-    
+
     await connection.commit();
-    
+
     // Obtener venta creada con detalles
-    const [ventaCreada] = await pool.execute(`
+    const [ventaCreada] = await pool.execute(
+      `
       SELECT v.*, u.nombre as usuario_nombre, u.email
       FROM ventas v
       LEFT JOIN usuarios u ON v.usuario_id = u.id
       WHERE v.id = ?
-    `, [ventaId]);
-    
+    `,
+      [ventaId]
+    );
+
     res.status(201).json({
       message: "Venta creada exitosamente",
       venta: ventaCreada[0],
       total,
-      items: items.length
+      items: items.length,
     });
-    
   } catch (error) {
     await connection.rollback();
     console.error("Error creando venta manual:", error);
@@ -337,43 +337,48 @@ exports.actualizarEstadoVenta = async (req, res) => {
   try {
     const { id } = req.params;
     const { estado, fecha_entrega } = req.body;
-    
-    const estadosValidos = ['pendiente', 'pagado', 'en_preparacion', 'entregado', 'cancelado'];
-    
+
+    const estadosValidos = [
+      "pendiente",
+      "pagado",
+      "en_preparacion",
+      "entregado",
+      "cancelado",
+    ];
+
     if (estado && !estadosValidos.includes(estado)) {
       return res.status(400).json({ error: "Estado inválido" });
     }
-    
+
     // Construir query dinámica
     let query = "UPDATE ventas SET ";
     const params = [];
-    
+
     if (estado) {
       query += "estado = ?";
       params.push(estado);
     }
-    
+
     if (fecha_entrega) {
       if (estado) query += ", ";
       query += "fecha_entrega = ?";
       params.push(fecha_entrega);
     }
-    
+
     query += " WHERE id = ?";
     params.push(id);
-    
+
     const [result] = await pool.execute(query, params);
-    
+
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "Venta no encontrada" });
     }
-    
-    res.json({ 
+
+    res.json({
       message: "Estado de venta actualizado exitosamente",
       estado,
-      fecha_entrega
+      fecha_entrega,
     });
-    
   } catch (error) {
     console.error("Error actualizando estado de venta:", error);
     res.status(500).json({ error: "Error al actualizar estado" });
@@ -385,35 +390,35 @@ exports.eliminarVenta = async (req, res) => {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
-    
+
     const { id } = req.params;
-    
+
     // Verificar que la venta existe y está en estado permitido
     const [venta] = await connection.execute(
       "SELECT estado FROM ventas WHERE id = ?",
       [id]
     );
-    
+
     if (venta.length === 0) {
       await connection.rollback();
       return res.status(404).json({ error: "Venta no encontrada" });
     }
-    
+
     // Solo permitir eliminar ventas pendientes o canceladas
-    if (!['pendiente', 'cancelado'].includes(venta[0].estado)) {
+    if (!["pendiente", "cancelado"].includes(venta[0].estado)) {
       await connection.rollback();
-      return res.status(400).json({ 
-        error: "Solo se pueden eliminar ventas pendientes o canceladas" 
+      return res.status(400).json({
+        error: "Solo se pueden eliminar ventas pendientes o canceladas",
       });
     }
-    
+
     // Obtener items de la venta para restaurar stock (solo si no está cancelada)
-    if (venta[0].estado !== 'cancelado') {
+    if (venta[0].estado !== "cancelado") {
       const [items] = await connection.execute(
         "SELECT producto_id, cantidad FROM venta_items WHERE venta_id = ?",
         [id]
       );
-      
+
       // Restaurar stock
       for (const item of items) {
         await connection.execute(
@@ -422,16 +427,20 @@ exports.eliminarVenta = async (req, res) => {
         );
       }
     }
-    
+
     // Eliminar items de venta
-    await connection.execute("DELETE FROM venta_items WHERE venta_id = ?", [id]);
-    
+    await connection.execute("DELETE FROM venta_items WHERE venta_id = ?", [
+      id,
+    ]);
+
     // Eliminar venta
-    const [result] = await connection.execute("DELETE FROM ventas WHERE id = ?", [id]);
-    
+    const [result] = await connection.execute(
+      "DELETE FROM ventas WHERE id = ?",
+      [id]
+    );
+
     await connection.commit();
     res.json({ message: "Venta eliminada exitosamente" });
-    
   } catch (error) {
     await connection.rollback();
     console.error("Error eliminando venta:", error);
@@ -447,28 +456,34 @@ exports.obtenerDetalleVentaCompleto = async (req, res) => {
     const { id } = req.params;
 
     // Obtener información de la venta
-    const [ventas] = await pool.execute(`
+    const [ventas] = await pool.execute(
+      `
       SELECT v.*, u.nombre as usuario_nombre, u.email, u.telefono, u.direccion
       FROM ventas v
       LEFT JOIN usuarios u ON v.usuario_id = u.id
       WHERE v.id = ?
-    `, [id]);
+    `,
+      [id]
+    );
 
     if (ventas.length === 0) {
       return res.status(404).json({ error: "Venta no encontrada" });
     }
 
     // Obtener items de la venta
-    const [items] = await pool.execute(`
+    const [items] = await pool.execute(
+      `
       SELECT vi.*, p.nombre, p.imagen_url, p.descripcion
       FROM venta_items vi
       JOIN productos p ON vi.producto_id = p.id
       WHERE vi.venta_id = ?
-    `, [id]);
+    `,
+      [id]
+    );
 
     res.json({
       venta: ventas[0],
-      items
+      items,
     });
   } catch (error) {
     console.error("Error obteniendo detalle de venta:", error);
@@ -509,7 +524,7 @@ exports.crearCategoria = async (req, res) => {
 
     res.status(201).json({
       message: "Categoría creada exitosamente",
-      categoria: { id: result.insertId, nombre, descripcion }
+      categoria: { id: result.insertId, nombre, descripcion },
     });
   } catch (error) {
     console.error("Error creando categoría:", error);

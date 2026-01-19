@@ -16,8 +16,8 @@ const AdminProducts = () => {
     categoria_id: "",
     stock: "",
     peso_kg: "0.5",
-    imagen_url: "/imagenes-tortas/default.jpg",
-    ingredientes: ""
+    imagen_url: "/imagenes-tortas/torta-default.jpg",
+    ingredientes: "",
   });
 
   useEffect(() => {
@@ -29,7 +29,7 @@ const AdminProducts = () => {
       setLoading(true);
       const [productosData, categoriasData] = await Promise.all([
         productService.getAll(),
-        adminService.obtenerCategorias()
+        adminService.obtenerCategorias(),
       ]);
       setProductos(productosData);
       setCategorias(categoriasData);
@@ -44,7 +44,7 @@ const AdminProducts = () => {
   const handleInputChange = (e) => {
     setNuevoProducto({
       ...nuevoProducto,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -60,8 +60,8 @@ const AdminProducts = () => {
         categoria_id: "",
         stock: "",
         peso_kg: "0.5",
-        imagen_url: "/imagenes-tortas/default.jpg",
-        ingredientes: ""
+        imagen_url: "/imagenes-tortas/torta-default.jpg",
+        ingredientes: "",
       });
       cargarDatos();
     } catch (error) {
@@ -97,32 +97,34 @@ const AdminProducts = () => {
           {productos.map((producto) => (
             <Col md={4} key={producto.id} className="mb-4">
               <Card>
-                <Card.Img 
-                  variant="top" 
-                  src={producto.imagen_url} 
-                  style={{ height: '200px', objectFit: 'cover' }}
+                <Card.Img
+                  variant="top"
+                  src={producto.imagen_url}
+                  style={{ height: "200px", objectFit: "cover" }}
                 />
                 <Card.Body>
                   <Card.Title>{producto.nombre}</Card.Title>
                   <Card.Text>
                     <strong>${producto.precio}</strong>
-                    <br/>
+                    <br />
                     <Badge bg={producto.stock > 5 ? "success" : "warning"}>
                       Stock: {producto.stock}
                     </Badge>
-                    <br/>
+                    <br />
                     {producto.categoria_nombre}
                   </Card.Text>
                   <div className="d-flex justify-content-between">
-                    <Button 
-                      variant="outline-primary" 
+                    <Button
+                      variant="outline-primary"
                       size="sm"
-                      onClick={() => window.location.href = `/admin/productos/editar/${producto.id}`}
+                      onClick={() =>
+                        (window.location.href = `/admin/productos/editar/${producto.id}`)
+                      }
                     >
                       Editar
                     </Button>
-                    <Button 
-                      variant="outline-danger" 
+                    <Button
+                      variant="outline-danger"
                       size="sm"
                       onClick={() => eliminarProducto(producto.id)}
                     >
@@ -208,17 +210,6 @@ const AdminProducts = () => {
                   </option>
                 ))}
               </Form.Select>
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Imagen URL</Form.Label>
-              <Form.Control
-                type="text"
-                name="imagen_url"
-                value={nuevoProducto.imagen_url}
-                onChange={handleInputChange}
-                placeholder="/imagenes-tortas/default.jpg"
-              />
             </Form.Group>
           </Form>
         </Modal.Body>

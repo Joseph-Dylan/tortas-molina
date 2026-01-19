@@ -32,16 +32,6 @@ const PaymentModal = ({ show, onHide, onConfirm, loading }) => {
               />
               <Form.Check
                 type="radio"
-                id="paypal"
-                label="PayPal"
-                name="paymentMethod"
-                value="paypal"
-                checked={paymentMethod === "paypal"}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="mb-2"
-              />
-              <Form.Check
-                type="radio"
                 id="efectivo"
                 label="💰 Efectivo"
                 name="paymentMethod"

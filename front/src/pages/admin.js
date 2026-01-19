@@ -42,11 +42,6 @@ const AdminPage = () => {
         onSelect={(k) => setActiveTab(k)}
         className="mb-4"
       >
-        <Tab eventKey="ventas" title="📦 Ventas">
-          <div className="mt-3">
-            <AdminSales />
-          </div>
-        </Tab>
         <Tab eventKey="productos" title="🍰 Productos">
           <div className="mt-3">
             <AdminProducts />

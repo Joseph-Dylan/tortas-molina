@@ -118,7 +118,7 @@ const Register = () => {
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>Dirección (opcional)</Form.Label>
+                  <Form.Label>Dirección </Form.Label>
                   <Form.Control
                     as="textarea"
                     rows={2}
@@ -136,7 +136,7 @@ const Register = () => {
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>Teléfono (opcional)</Form.Label>
+                  <Form.Label>Teléfono</Form.Label>
                   <Form.Control
                     type="text"
                     name="telefono"

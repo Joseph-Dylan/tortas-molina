@@ -37,7 +37,7 @@ const Home = () => {
       <div
         className="text-center py-5 mb-5 rounded"
         style={{
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          background: "linear-gradient(135deg, #ff8c00 0%, #ad2d1c 100%)",
           color: "white",
         }}
       >
